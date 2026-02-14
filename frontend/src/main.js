@@ -53,7 +53,14 @@ import {
   faArrowLeft,
   faSync,
   faTable,
-  faStream
+  faStream,
+  faBars,
+  faList,
+  faCube,
+  faSlidersH,
+  faThLarge,
+  faFileAlt,
+  faBolt
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -103,7 +110,14 @@ library.add(
   faArrowLeft,
   faSync,
   faTable,
-  faStream
+  faStream,
+  faBars,
+  faList,
+  faCube,
+  faSlidersH,
+  faThLarge,
+  faFileAlt,
+  faBolt
 )
 
 const app = createApp(App)

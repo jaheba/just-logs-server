@@ -6,9 +6,14 @@
         <FilterBar
           v-model:filters="filters"
           :apps="apps"
+          :sidebar-collapsed="sidebarCollapsed"
+          :sidebar-header-hovered="sidebarHeaderHovered"
+          :new-log-received="newLogCounter"
           @apply="applyFilters"
           @export="handleExport"
           @save-query="handleSaveQuery"
+          @toggle-sidebar="toggleSidebar"
+          @sidebar-hover="sidebarHeaderHovered = $event"
         />
         
         <!-- Histogram -->
@@ -73,6 +78,8 @@
       
       <!-- Right Sidebar (Signals) -->
       <SignalsSidebar
+        :collapsed="sidebarCollapsed"
+        :hovered="sidebarHeaderHovered"
         :apps="apps"
         :selected-app="filters.app_id"
         :active-levels="activeLevels"
@@ -82,6 +89,8 @@
         @select-app="handleSelectApp"
         @select-tag="handleSelectTag"
         @load-query="handleLoadQuery"
+        @toggle="toggleSidebar"
+        @header-hover="sidebarHeaderHovered = $event"
       />
     </div>
   </div>
@@ -97,6 +106,7 @@ import {
   createLogStream,
   getLogTags
 } from '../services/api'
+import { useSidebar } from '../composables/useSidebar'
 import FilterBar from '../components/FilterBar.vue'
 import LogHistogram from '../components/LogHistogram.vue'
 import LogEntryCard from '../components/LogEntryCard.vue'
@@ -111,6 +121,8 @@ export default {
     SignalsSidebar
   },
   setup() {
+    const { sidebarCollapsed, initializeSidebar, toggleSidebar } = useSidebar()
+    
     const logs = ref([])
     const apps = ref([])
     const loading = ref(false)
@@ -120,6 +132,8 @@ export default {
     const offset = ref(0)
     const activeLevels = ref([])
     const hasMoreLogs = ref(true)
+    const newLogCounter = ref(0)
+    const sidebarHeaderHovered = ref(false)
     let eventSource = null
     let autoRefreshInterval = null
     
@@ -466,6 +480,7 @@ export default {
             logs.value.pop()
           }
           totalLogs.value++
+          newLogCounter.value++ // Trigger animation
         },
         (error) => {
           console.error('SSE error:', error)
@@ -584,6 +599,7 @@ export default {
     }
     
     onMounted(() => {
+      initializeSidebar() // Initialize sidebar collapsed state
       applyHashFilters() // Apply filters from URL hash first
       fetchLogs()
       fetchApps()
@@ -602,6 +618,10 @@ export default {
     })
     
     return {
+      sidebarCollapsed,
+      sidebarHeaderHovered,
+      toggleSidebar,
+      newLogCounter,
       logs,
       apps,
       loading,

@@ -19,12 +19,22 @@
           </button>
           <button
             @click="toggleWatch"
-            class="watch-btn"
-            :class="{ active: localFilters.realtime }"
-            title="Watch for changes"
+            class="live-btn"
+            :class="{ active: localFilters.realtime, 'new-log': showNewLogAnimation }"
+            :title="localFilters.realtime ? 'Live updates ON' : 'Enable live updates'"
           >
-            <font-awesome-icon icon="eye" class="watch-icon" />
-            <span>{{ localFilters.realtime ? 'Watching' : 'Watch' }}</span>
+            <font-awesome-icon icon="bolt" class="live-icon" />
+            <span>{{ localFilters.realtime ? 'LIVE' : 'Live' }}</span>
+          </button>
+          <button
+            @click="toggleSidebar"
+            @mouseenter="$emit('sidebar-hover', true)"
+            @mouseleave="$emit('sidebar-hover', false)"
+            class="sidebar-toggle-btn"
+            :class="{ collapsed: sidebarCollapsed, hovered: sidebarHeaderHovered }"
+            :title="sidebarCollapsed ? 'Show filters' : 'Hide filters'"
+          >
+            <font-awesome-icon :icon="sidebarCollapsed ? 'chevron-left' : 'chevron-right'" />
           </button>
         </div>
       </div>
@@ -123,10 +133,34 @@ export default {
     apps: {
       type: Array,
       default: () => []
+    },
+    sidebarCollapsed: {
+      type: Boolean,
+      default: true
+    },
+    sidebarHeaderHovered: {
+      type: Boolean,
+      default: false
+    },
+    newLogReceived: {
+      type: Number,
+      default: 0
     }
   },
-  emits: ['update:filters', 'apply', 'export', 'save-query'],
+  emits: ['update:filters', 'apply', 'export', 'save-query', 'toggle-sidebar', 'sidebar-hover'],
   setup(props, { emit }) {
+    const showNewLogAnimation = ref(false)
+    
+    // Watch for new log notifications
+    watch(() => props.newLogReceived, (newVal, oldVal) => {
+      if (newVal > oldVal && props.filters.realtime) {
+        showNewLogAnimation.value = true
+        setTimeout(() => {
+          showNewLogAnimation.value = false
+        }, 800) // Animation duration
+      }
+    })
+    
     // Initialize time range with actual dates
     const initTimeRange = () => {
       const now = new Date()
@@ -207,6 +241,10 @@ export default {
       emit('update:filters', { ...localFilters.value })
     }
     
+    const toggleSidebar = () => {
+      emit('toggle-sidebar')
+    }
+    
     const getAppName = (appId) => {
       const app = props.apps.find(a => a.id === appId)
       return app ? app.name : 'Unknown'
@@ -285,7 +323,9 @@ export default {
     
     return {
       localFilters,
+      showNewLogAnimation,
       toggleWatch,
+      toggleSidebar,
       getAppName,
       removeTagFilter,
       showCustomDateModal,
@@ -306,6 +346,7 @@ export default {
 
 .filter-container {
   padding: 0.5rem 0.75rem;
+  padding-right: 40px; /* Reserve space for fixed sidebar toggle button */
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -374,7 +415,7 @@ export default {
   background: var(--color-secondary, #5a67d8);
 }
 
-.watch-btn {
+.live-btn {
   padding: 0.625rem 1rem;
   background: var(--bg-tertiary, #2a2a2a);
   border: none;
@@ -386,23 +427,139 @@ export default {
   align-items: center;
   gap: 0.5rem;
   transition: all 0.2s;
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.watch-btn:hover {
+.live-btn:hover {
   background: var(--bg-sidebar-hover, #333);
-  border-color: var(--color-primary, #667eea);
+  transform: translateY(-1px);
 }
 
-.watch-btn.active {
-  background: var(--color-primary, #667eea);
-  border-color: var(--color-primary, #667eea);
+.live-btn.active {
+  background: var(--color-danger, #dc3545);
   color: white;
+  animation: pulse 2s ease-in-out infinite;
+  position: relative;
 }
 
-.watch-icon {
-  font-size: 0.75rem;
+.live-icon {
+  font-size: 0.875rem;
+}
+
+.live-btn.active .live-icon {
+  animation: bolt-flash 1.5s ease-in-out infinite;
+}
+
+/* New log received animation */
+.live-btn.active.new-log {
+  animation: pulse 2s ease-in-out infinite, border-sweep 0.8s ease-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(220, 53, 69, 0);
+  }
+}
+
+@keyframes bolt-flash {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes border-sweep {
+  0% {
+    box-shadow: 
+      0 0 0 0 rgba(220, 53, 69, 0.7),
+      0 -2px 8px 2px rgba(255, 255, 255, 0.8),
+      0 0 0 0 transparent,
+      0 0 0 0 transparent,
+      0 0 0 0 transparent;
+  }
+  25% {
+    box-shadow: 
+      0 0 0 0 rgba(220, 53, 69, 0.7),
+      0 0 0 0 transparent,
+      2px 0 8px 2px rgba(255, 255, 255, 0.8),
+      0 0 0 0 transparent,
+      0 0 0 0 transparent;
+  }
+  50% {
+    box-shadow: 
+      0 0 0 0 rgba(220, 53, 69, 0.7),
+      0 0 0 0 transparent,
+      0 0 0 0 transparent,
+      0 2px 8px 2px rgba(255, 255, 255, 0.8),
+      0 0 0 0 transparent;
+  }
+  75% {
+    box-shadow: 
+      0 0 0 0 rgba(220, 53, 69, 0.7),
+      0 0 0 0 transparent,
+      0 0 0 0 transparent,
+      0 0 0 0 transparent,
+      -2px 0 8px 2px rgba(255, 255, 255, 0.8);
+  }
+  100% {
+    box-shadow: 
+      0 0 0 0 rgba(220, 53, 69, 0.7),
+      0 -2px 8px 2px rgba(255, 255, 255, 0),
+      0 0 0 0 transparent,
+      0 0 0 0 transparent,
+      0 0 0 0 transparent;
+  }
+}
+
+/* Sidebar Toggle Button */
+.sidebar-toggle-btn {
+  position: fixed;
+  right: 220px; /* Positioned at left edge of sidebar when expanded */
+  top: 44px; /* Aligned with sidebar header */
+  width: 32px;
+  height: 44px;
+  padding: 0;
+  background: var(--bg-tertiary, #e9ecef);
+  border: 1px solid var(--border-color, #e0e0e0);
+  border-right: none;
+  border-top: 1px solid var(--border-color, #e0e0e0);
+  border-bottom: 1px solid var(--border-color, #333);
+  border-radius: 6px 0 0 0;
+  color: var(--text-secondary, #666);
+  font-size: 0.875rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: right 0.3s ease, background 0.2s ease;
+  z-index: 102; /* Above sidebar so it's always clickable */
+  box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+}
+
+/* When hovering button OR when sidebar header is hovered, both change background */
+.sidebar-toggle-btn:not(.collapsed):hover,
+.sidebar-toggle-btn:not(.collapsed).hovered {
+  background: var(--bg-secondary, #f5f5f5);
+  color: var(--text-primary, #333);
+}
+
+.sidebar-toggle-btn.collapsed {
+  right: 0; /* Moves to right edge when sidebar collapses */
+  border-radius: 6px 0 0 6px;
+  box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-toggle-btn.collapsed:hover {
+  background: var(--bg-secondary, #f5f5f5);
+  color: var(--text-primary, #333);
 }
 
 /* Filter Row */

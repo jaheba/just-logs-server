@@ -3,11 +3,16 @@
     <!-- Top Navigation Bar -->
     <header class="navbar">
       <div class="navbar-left">
+        <!-- Burger Menu Button -->
+        <button class="burger-btn" @click="toggleNavMenu" :title="showNavMenu ? 'Close menu' : 'Open menu'">
+          <font-awesome-icon :icon="showNavMenu ? 'times' : 'bars'" />
+        </button>
+        
         <div class="logo">
           <span class="logo-j">j</span><span class="logo-l">l</span><span class="logo-o">o</span>
         </div>
         
-        <nav class="nav-links">
+        <nav class="nav-links desktop-only">
           <router-link to="/" class="nav-link" :class="{ active: $route.path === '/' }">
             Events
           </router-link>
@@ -86,6 +91,54 @@
       </div>
     </header>
     
+    <!-- Mobile Navigation Menu -->
+    <transition name="nav-menu">
+      <div v-if="showNavMenu" class="mobile-nav-overlay" @click="closeNavMenu">
+        <nav class="mobile-nav-menu" @click.stop>
+          <div class="mobile-nav-header">
+            <div class="logo">
+              <span class="logo-j">j</span><span class="logo-l">l</span><span class="logo-o">o</span>
+            </div>
+            <button class="close-nav-btn" @click="closeNavMenu">
+              <font-awesome-icon icon="times" />
+            </button>
+          </div>
+          
+          <div class="mobile-nav-items">
+            <router-link to="/" class="mobile-nav-link" :class="{ active: $route.path === '/' }" @click="closeNavMenu">
+              <font-awesome-icon icon="stream" class="nav-icon" />
+              Events
+            </router-link>
+            
+            <router-link to="/dashboards" class="mobile-nav-link" :class="{ active: $route.path.startsWith('/dashboards') }" @click="closeNavMenu">
+              <font-awesome-icon icon="chart-line" class="nav-icon" />
+              Dashboards
+            </router-link>
+            
+            <router-link to="/apps" class="mobile-nav-link" :class="{ active: $route.path === '/apps' }" @click="closeNavMenu">
+              <font-awesome-icon icon="th-large" class="nav-icon" />
+              Apps
+            </router-link>
+            
+            <router-link to="/api-keys" class="mobile-nav-link" :class="{ active: $route.path === '/api-keys' }" @click="closeNavMenu">
+              <font-awesome-icon icon="key" class="nav-icon" />
+              API Keys
+            </router-link>
+            
+            <router-link v-if="isAdmin" to="/users" class="mobile-nav-link" :class="{ active: $route.path === '/users' }" @click="closeNavMenu">
+              <font-awesome-icon icon="users" class="nav-icon" />
+              Users
+            </router-link>
+            
+            <router-link v-if="isAdmin" to="/settings" class="mobile-nav-link" :class="{ active: $route.path === '/settings' }" @click="closeNavMenu">
+              <font-awesome-icon icon="cog" class="nav-icon" />
+              Settings
+            </router-link>
+          </div>
+        </nav>
+      </div>
+    </transition>
+    
     <!-- Content Area -->
     <main class="content">
       <slot />
@@ -108,6 +161,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { logout, getCurrentUser } from '../services/api'
 import { useToast } from '../composables/useToast'
+import { useSidebar } from '../composables/useSidebar'
 import ThemeSwitcher from './ThemeSwitcher.vue'
 import ChangePasswordDialog from './ChangePasswordDialog.vue'
 import Toast from './Toast.vue'
@@ -123,10 +177,12 @@ export default {
     const route = useRoute()
     const router = useRouter()
     const { success } = useToast()
+    const { sidebarCollapsed, toggleSidebar: toggleSidebarState } = useSidebar()
     
     const currentUser = ref(null)
     const showMenu = ref(false)
     const showChangePasswordDialog = ref(false)
+    const showNavMenu = ref(false)
     const menuWrapper = ref(null)
     
     const fetchCurrentUser = async () => {
@@ -142,10 +198,26 @@ export default {
       return currentUser.value?.role === 'admin'
     })
     
+    const isDashboardPage = computed(() => {
+      return route.path === '/'
+    })
+    
     const displayName = computed(() => {
       if (!currentUser.value) return 'User'
       return currentUser.value.full_name || currentUser.value.username
     })
+    
+    const toggleNavMenu = () => {
+      showNavMenu.value = !showNavMenu.value
+    }
+    
+    const closeNavMenu = () => {
+      showNavMenu.value = false
+    }
+    
+    const toggleSidebar = () => {
+      toggleSidebarState()
+    }
     
     const getUserInitials = () => {
       if (!currentUser.value) return 'U'
@@ -216,13 +288,19 @@ export default {
     return {
       currentUser,
       isAdmin,
+      isDashboardPage,
       displayName,
       showMenu,
       showChangePasswordDialog,
+      showNavMenu,
       menuWrapper,
+      sidebarCollapsed,
       getUserInitials,
       formatRole,
       toggleMenu,
+      toggleNavMenu,
+      closeNavMenu,
+      toggleSidebar,
       goToProfile,
       openChangePassword,
       handlePasswordChanged,
@@ -264,6 +342,25 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+
+/* Burger Menu Button */
+.burger-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-sidebar, #e0e0e0);
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.burger-btn:hover {
+  background: var(--bg-sidebar-hover, #2a2a2a);
 }
 
 /* Logo */
@@ -508,6 +605,113 @@ export default {
   transform: translateY(-10px);
 }
 
+/* Mobile Navigation Menu */
+.mobile-nav-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 1000;
+  display: none;
+}
+
+.mobile-nav-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 280px;
+  max-width: 80vw;
+  background: var(--bg-sidebar, #1a1a1a);
+  box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+
+.mobile-nav-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  border-bottom: 1px solid var(--border-color, #333);
+}
+
+.close-nav-btn {
+  background: transparent;
+  border: none;
+  color: var(--text-sidebar, #e0e0e0);
+  cursor: pointer;
+  font-size: 1.25rem;
+  padding: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  border-radius: 4px;
+}
+
+.close-nav-btn:hover {
+  background: var(--bg-sidebar-hover, #2a2a2a);
+}
+
+.mobile-nav-items {
+  flex: 1;
+  padding: 0.5rem 0;
+}
+
+.mobile-nav-link {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.875rem 1.25rem;
+  color: var(--text-sidebar, #e0e0e0);
+  text-decoration: none;
+  transition: all 0.2s;
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+
+.mobile-nav-link:hover {
+  background: var(--bg-sidebar-hover, #2a2a2a);
+}
+
+.mobile-nav-link.active {
+  background: var(--color-primary);
+  color: var(--text-on-primary);
+}
+
+.mobile-nav-link .nav-icon {
+  width: 20px;
+  font-size: 1.125rem;
+}
+
+/* Navigation Menu Animation */
+.nav-menu-enter-active,
+.nav-menu-leave-active {
+  transition: opacity 0.3s;
+}
+
+.nav-menu-enter-active .mobile-nav-menu,
+.nav-menu-leave-active .mobile-nav-menu {
+  transition: transform 0.3s ease;
+}
+
+.nav-menu-enter-from,
+.nav-menu-leave-to {
+  opacity: 0;
+}
+
+.nav-menu-enter-from .mobile-nav-menu {
+  transform: translateX(-100%);
+}
+
+.nav-menu-leave-to .mobile-nav-menu {
+  transform: translateX(-100%);
+}
+
 /* Content Area */
 .content {
   flex: 1;
@@ -516,22 +720,39 @@ export default {
 }
 
 /* Responsive */
+@media (min-width: 769px) {
+  /* Desktop: hide burger menu and mobile nav */
+  .burger-btn {
+    display: none;
+  }
+  
+  .mobile-nav-overlay {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
   .navbar {
     padding: 0 0.75rem;
   }
   
   .navbar-left {
-    gap: 1rem;
+    gap: 0.75rem;
   }
   
-  .nav-links {
-    gap: 0.125rem;
+  /* Hide desktop nav links on mobile */
+  .nav-links.desktop-only {
+    display: none;
   }
   
-  .nav-link {
-    padding: 0.375rem 0.5rem;
-    font-size: 0.75rem;
+  /* Show burger button on mobile */
+  .burger-btn {
+    display: flex;
+  }
+  
+  /* Show mobile nav overlay when active */
+  .mobile-nav-overlay {
+    display: block;
   }
   
   .logo {

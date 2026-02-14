@@ -1,13 +1,17 @@
 <template>
   <aside class="sidebar" :class="{ collapsed }">
-    <div class="sidebar-header">
-      <button class="collapse-btn" @click="toggleCollapse" :title="collapsed ? 'Expand sidebar' : 'Collapse sidebar'">
-        <font-awesome-icon :icon="collapsed ? 'chevron-left' : 'chevron-right'" />
-      </button>
-      <div v-if="!collapsed" class="sidebar-title">Signals</div>
+    <!-- Header -->
+    <div 
+      class="sidebar-header" 
+      :class="{ hovered }" 
+      @click="$emit('toggle')"
+      @mouseenter="$emit('header-hover', true)"
+      @mouseleave="$emit('header-hover', false)"
+    >
+      <span class="sidebar-title">Signals</span>
     </div>
     
-    <div v-if="!collapsed" class="sidebar-content">
+    <div class="sidebar-content">
       <div class="signal-group">
         <div class="signal-group-title">By Level</div>
         <div
@@ -76,6 +80,10 @@ import { ref } from 'vue'
 export default {
   name: 'SignalsSidebar',
   props: {
+    collapsed: {
+      type: Boolean,
+      default: false
+    },
     apps: {
       type: Array,
       default: () => []
@@ -95,11 +103,14 @@ export default {
     selectedTags: {
       type: Object,
       default: () => ({})
+    },
+    hovered: {
+      type: Boolean,
+      default: false
     }
   },
-  emits: ['select-signal', 'select-app', 'select-tag', 'load-query'],
+  emits: ['select-signal', 'select-app', 'select-tag', 'load-query', 'toggle', 'header-hover'],
   setup() {
-    const collapsed = ref(false)
     const savedQueries = ref([])
     
     const levelSignals = [
@@ -110,10 +121,6 @@ export default {
       { id: 'info', name: 'Info', filter: { level: 'INFO' }, color: 'var(--level-info, #17a2b8)' },
       { id: 'debug', name: 'Debug', filter: { level: 'DEBUG' }, color: 'var(--level-debug, #6c757d)' }
     ]
-    
-    const toggleCollapse = () => {
-      collapsed.value = !collapsed.value
-    }
     
     // Load saved queries from localStorage
     try {
@@ -126,41 +133,51 @@ export default {
     }
     
     return {
-      collapsed,
       levelSignals,
-      savedQueries,
-      toggleCollapse
+      savedQueries
     }
   }
 }
 </script>
 
 <style scoped>
+/* Sidebar container - slides with transform */
 .sidebar {
   width: 220px;
-  background: var(--bg-tertiary, #e9ecef);
-  border-left: 1px solid var(--border-color, #e0e0e0);
-  overflow-y: auto;
-  transition: width 0.3s;
+  background: transparent;
   flex-shrink: 0;
   display: flex;
   flex-direction: column;
   order: 2;
+  position: relative;
+  transform: translateX(0);
+  transition: transform 0.3s ease, margin-left 0.3s ease;
+  z-index: 100;
 }
 
 .sidebar.collapsed {
-  width: 44px;
-  border: none;
+  transform: translateX(220px); /* Slides off-screen to the right */
+  margin-left: -220px; /* Gives space back to main content */
 }
 
+/* Sidebar header */
 .sidebar-header {
-  padding: 0.5rem 0.75rem;
-  border-bottom: 1px solid var(--border-color, #333);
+  width: 100%;
+  height: 44px;
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
-  gap: 0.5rem;
-  min-height: 44px;
+  padding: 0.75rem;
+  background: var(--bg-tertiary, #e9ecef);
+  border-bottom: 1px solid var(--border-color, #333);
+  flex-shrink: 0;
+  transition: background 0.2s ease;
+  cursor: pointer;
+}
+
+/* Hover effect - ONLY when button or header itself is hovered (via .hovered class) */
+.sidebar-header.hovered {
+  background: var(--bg-secondary, #f5f5f5);
 }
 
 .sidebar-title {
@@ -169,31 +186,14 @@ export default {
   text-transform: uppercase;
   letter-spacing: 0.5px;
   color: var(--text-secondary, #666);
-  flex: 1;
-}
-
-.collapse-btn {
-  background: transparent;
-  border: none;
-  color: var(--text-secondary, #666);
-  cursor: pointer;
-  font-size: 0.875rem;
-  padding: 0.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: color 0.2s;
-  width: 24px;
-  height: 24px;
-}
-
-.collapse-btn:hover {
-  color: var(--text-primary, #333);
 }
 
 .sidebar-content {
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
+  width: 100%;
+  background: var(--bg-tertiary, #e9ecef);
 }
 
 .signal-group {

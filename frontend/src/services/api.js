@@ -162,4 +162,73 @@ export const getRetentionRun = (runId) => {
   return api.get(`/retention/runs/${runId}`)
 }
 
+// Dashboards
+export const getDashboards = () => {
+  return api.get('/dashboards')
+}
+
+export const getDashboard = (dashboardId) => {
+  return api.get(`/dashboards/${dashboardId}`)
+}
+
+export const createDashboard = (dashboard) => {
+  return api.post('/dashboards', dashboard)
+}
+
+export const updateDashboard = (dashboardId, dashboard) => {
+  return api.put(`/dashboards/${dashboardId}`, dashboard)
+}
+
+export const deleteDashboard = (dashboardId) => {
+  return api.delete(`/dashboards/${dashboardId}`)
+}
+
+export const duplicateDashboard = (dashboardId, newName) => {
+  return api.post(`/dashboards/${dashboardId}/duplicate`, null, {
+    params: { new_name: newName }
+  })
+}
+
+// Widgets
+export const createWidget = (dashboardId, widget) => {
+  return api.post(`/dashboards/${dashboardId}/widgets`, widget)
+}
+
+export const updateWidget = (widgetId, widget) => {
+  return api.put(`/widgets/${widgetId}`, widget)
+}
+
+export const deleteWidget = (widgetId) => {
+  return api.delete(`/widgets/${widgetId}`)
+}
+
+export const batchUpdateWidgets = (widgets) => {
+  return api.put('/widgets/batch', { widgets })
+}
+
+export const getWidgetData = (widgetId, timeRange = {}) => {
+  return api.post(`/widgets/${widgetId}/data`, timeRange)
+}
+
+// Saved Queries
+export const getSavedQueries = () => {
+  return api.get('/saved-queries')
+}
+
+export const getSavedQuery = (queryId) => {
+  return api.get(`/saved-queries/${queryId}`)
+}
+
+export const createSavedQuery = (query) => {
+  return api.post('/saved-queries', query)
+}
+
+export const updateSavedQuery = (queryId, query) => {
+  return api.put(`/saved-queries/${queryId}`, query)
+}
+
+export const deleteSavedQuery = (queryId) => {
+  return api.delete(`/saved-queries/${queryId}`)
+}
+
 export default api

@@ -21,11 +21,18 @@ services:
       # Database configuration
       - JLO_DB_PATH=/app/backend/data/jlo.db
       
-      # Optional: Set custom admin password on first run
-      # - JLO_ADMIN_PASSWORD=your-secure-password
+      # REQUIRED: JWT secret key (used to sign authentication tokens)
+      # Generate with: openssl rand -hex 32
+      # Store in .env file: JLO_SECRET_KEY=your_generated_key
+      - JLO_SECRET_KEY=${JLO_SECRET_KEY}
       
-      # Optional: JWT secret (recommended to set in production)
-      # - JLO_SECRET_KEY=your-secret-key-here
+      # REQUIRED for first-time setup: Admin user password
+      # Will only create admin user if it doesn't exist
+      - JLO_ADMIN_PASSWORD=${JLO_ADMIN_PASSWORD}
+      
+      # Optional: Environment mode (default: production)
+      # Set to "development" to allow HTTP cookies
+      - JLO_ENV=${JLO_ENV:-production}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]

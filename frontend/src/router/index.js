@@ -42,6 +42,18 @@ const routes = [
     name: 'Settings',
     component: () => import('../views/Settings.vue'),
     meta: { requiresAuth: true, requiresAdmin: true }
+  },
+  {
+    path: '/dashboards',
+    name: 'Dashboards',
+    component: () => import('../views/DashboardsList.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/dashboards/:id',
+    name: 'DashboardView',
+    component: () => import('../views/DashboardView.vue'),
+    meta: { requiresAuth: true }
   }
 ]
 

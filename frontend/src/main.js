@@ -13,6 +13,7 @@ import {
   faMoon,
   faCircleHalfStroke,
   faChartBar,
+  faChartLine,
   faBox,
   faCog,
   faChevronRight,
@@ -43,11 +44,16 @@ import {
   faUserShield,
   faUserEdit,
   faLock,
+  faGlobe,
   faSignOutAlt,
   faEdit,
   faPen,
   faCheckCircle,
-  faTimesCircle
+  faTimesCircle,
+  faArrowLeft,
+  faSync,
+  faTable,
+  faStream
 } from '@fortawesome/free-solid-svg-icons'
 
 library.add(
@@ -57,6 +63,7 @@ library.add(
   faMoon,
   faCircleHalfStroke,
   faChartBar,
+  faChartLine,
   faBox,
   faCog,
   faChevronRight,
@@ -87,11 +94,16 @@ library.add(
   faUserShield,
   faUserEdit,
   faLock,
+  faGlobe,
   faSignOutAlt,
   faEdit,
   faPen,
   faCheckCircle,
-  faTimesCircle
+  faTimesCircle,
+  faArrowLeft,
+  faSync,
+  faTable,
+  faStream
 )
 
 const app = createApp(App)

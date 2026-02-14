@@ -204,35 +204,37 @@ export default {
 <style scoped>
 .log-entry {
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.15s;
+  border: none;
+  margin: 0;
 }
 
 .log-entry.log-even {
-  background: var(--log-bg-even, #1e1e1e);
+  background: var(--log-bg-even, rgba(30, 30, 30, 0.6));
 }
 
 .log-entry.log-odd {
-  background: var(--log-bg-odd, #0d0d0d);
+  background: var(--log-bg-odd, rgba(13, 13, 13, 0.3));
 }
 
 .log-entry.log-even:hover {
-  background: var(--log-bg-even-hover, #2a2a2a);
+  background: var(--log-bg-even-hover, rgba(42, 42, 42, 0.8));
 }
 
 .log-entry.log-odd:hover {
-  background: var(--log-bg-odd-hover, #1a1a1a);
+  background: var(--log-bg-odd-hover, rgba(26, 26, 26, 0.6));
 }
 
 .log-header {
-  padding: 0.5rem 0.625rem;
+  padding: 0.25rem 0.5rem;
   display: flex;
   align-items: center;
-  gap: 0.625rem;
+  gap: 0.5rem;
 }
 
 .log-dot {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
   border-radius: 50%;
   flex-shrink: 0;
 }
@@ -259,19 +261,22 @@ export default {
 
 .log-timestamp {
   color: var(--text-muted, #666);
-  font-size: 0.6875rem;
+  font-size: 0.65rem;
   font-family: var(--theme-font-mono, monospace);
-  min-width: 65px;
+  min-width: 55px;
+  flex-shrink: 0;
 }
 
 .log-level {
-  padding: 0.125rem 0.375rem;
-  border-radius: 3px;
-  font-size: 0.625rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 2px;
+  font-size: 0.6rem;
   font-weight: 600;
   text-transform: uppercase;
-  min-width: 48px;
+  min-width: 42px;
   text-align: center;
+  flex-shrink: 0;
+  line-height: 1;
 }
 
 .log-level.level-error {
@@ -302,30 +307,33 @@ export default {
 .log-message {
   flex: 1;
   color: var(--text-primary, #e0e0e0);
-  font-size: 0.8125rem;
-  line-height: 1.4;
+  font-size: 0.8rem;
+  line-height: 1.3;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  min-width: 0;
 }
 
 .log-tags {
   display: flex;
-  gap: 0.375rem;
-  flex-wrap: wrap;
+  gap: 0.3rem;
+  flex-wrap: nowrap;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .tag-badge {
   display: inline-block;
-  padding: 0.125rem 0.375rem;
+  padding: 0.1rem 0.3rem;
   background: var(--color-primary, #667eea);
   color: white;
-  border-radius: 3px;
-  font-size: 0.625rem;
+  border-radius: 2px;
+  font-size: 0.6rem;
   font-weight: 500;
   white-space: nowrap;
   font-family: var(--theme-font-mono, monospace);
+  line-height: 1;
 }
 
 .tag-badge.tag-clickable {
@@ -356,8 +364,8 @@ export default {
 
 .log-expand-icon {
   color: var(--text-muted, #666);
-  font-size: 0.75rem;
-  margin-left: auto;
+  font-size: 0.7rem;
+  margin-left: 0.25rem;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -365,16 +373,16 @@ export default {
 
 /* Expanded Details */
 .log-details {
-  padding: 0.625rem;
+  padding: 0.5rem 0.5rem 0.5rem 1.5rem;
   border-top: 1px solid var(--border-color, #333);
   background: var(--bg-primary, #0d0d0d);
   display: flex;
   flex-direction: column;
-  gap: 0.625rem;
+  gap: 0.5rem;
 }
 
 .property-section {
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.4rem;
 }
 
 .property-section:last-child {
@@ -382,18 +390,18 @@ export default {
 }
 
 .property-title {
-  font-size: 0.625rem;
+  font-size: 0.6rem;
   font-weight: 600;
   color: var(--color-primary, #667eea);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  margin-bottom: 0.375rem;
+  margin-bottom: 0.3rem;
 }
 
 .property-grid {
   font-family: var(--theme-font-mono, monospace);
-  font-size: 0.6875rem;
-  line-height: 1.5;
+  font-size: 0.675rem;
+  line-height: 1.4;
   color: var(--text-primary, #e0e0e0);
 }
 
@@ -405,7 +413,7 @@ export default {
 
 .property-row {
   display: flex;
-  padding: 0.125rem 0;
+  padding: 0.1rem 0;
   gap: 0.5rem;
   align-items: center;
 }
@@ -416,14 +424,16 @@ export default {
 
 .property-key {
   color: var(--level-info, #17a2b8);
-  min-width: 120px;
+  min-width: 100px;
   flex-shrink: 0;
+  font-size: 0.65rem;
 }
 
 .property-value {
   color: var(--text-primary, #e0e0e0);
   flex: 1;
   word-break: break-word;
+  font-size: 0.65rem;
 }
 
 .property-actions {
@@ -431,7 +441,7 @@ export default {
   opacity: 0;
   transition: opacity 0.2s;
   display: flex;
-  gap: 0.25rem;
+  gap: 0.2rem;
 }
 
 .property-row:hover .property-actions {
@@ -439,11 +449,11 @@ export default {
 }
 
 .action-icon {
-  padding: 0.0625rem 0.25rem;
+  padding: 0.05rem 0.2rem;
   background: var(--bg-tertiary, #2a2a2a);
   border-radius: 2px;
   cursor: pointer;
-  font-size: 0.6875rem;
+  font-size: 0.65rem;
   transition: background 0.2s;
 }
 

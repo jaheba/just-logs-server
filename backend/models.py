@@ -18,6 +18,12 @@ class UserRole(str, Enum):
     VIEWER = "viewer"
 
 
+class Environment(str, Enum):
+    PRODUCTION = "production"
+    STAGING = "staging"
+    DEVELOPMENT = "development"
+
+
 class LogCreate(BaseModel):
     level: LogLevel = LogLevel.INFO
     message: str
@@ -46,11 +52,18 @@ class LogResponse(BaseModel):
 
 class AppCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
+    environment: Environment = Environment.PRODUCTION
+
+
+class AppUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    environment: Optional[Environment] = None
 
 
 class AppResponse(BaseModel):
     id: int
     name: str
+    environment: str
     created_at: datetime
 
 
@@ -180,3 +193,141 @@ class RetentionPreview(BaseModel):
     log_count: int
     oldest_log: Optional[datetime] = None
     newest_log: Optional[datetime] = None
+
+
+class EnvironmentRetentionPolicy(BaseModel):
+    """Retention policy for an environment"""
+
+    id: Optional[int] = None
+    environment: Environment
+    priority_tier: PriorityTier
+    retention_type: RetentionType
+    retention_days: Optional[int] = None
+    retention_count: Optional[int] = None
+    enabled: bool = True
+    created_at: Optional[datetime] = None
+    updated_at: Optional[datetime] = None
+
+
+class EnvironmentRetentionPolicyCreate(BaseModel):
+    environment: Environment
+    priority_tier: PriorityTier
+    retention_type: RetentionType
+    retention_days: Optional[int] = Field(None, gt=0)
+    retention_count: Optional[int] = Field(None, gt=0)
+    enabled: bool = True
+
+
+class EnvironmentRetentionPolicyUpdate(BaseModel):
+    retention_type: Optional[RetentionType] = None
+    retention_days: Optional[int] = Field(None, gt=0)
+    retention_count: Optional[int] = Field(None, gt=0)
+    enabled: Optional[bool] = None
+
+
+# Dashboard models
+class WidgetType(str, Enum):
+    METRIC = "metric"
+    CHART = "chart"
+    TABLE = "table"
+    LOG_STREAM = "log_stream"
+
+
+class DashboardCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = None
+    is_public: bool = False
+    layout_config: Optional[Dict[str, Any]] = None
+    refresh_interval: int = Field(default=60, ge=0)
+
+
+class DashboardUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = None
+    is_public: Optional[bool] = None
+    layout_config: Optional[Dict[str, Any]] = None
+    refresh_interval: Optional[int] = Field(None, ge=0)
+
+
+class DashboardResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    owner_id: int
+    is_public: bool
+    layout_config: Optional[Dict[str, Any]]
+    refresh_interval: int
+    created_at: datetime
+    updated_at: datetime
+
+
+class WidgetCreate(BaseModel):
+    dashboard_id: int
+    widget_type: WidgetType
+    title: str = Field(..., min_length=1, max_length=200)
+    position_x: int = Field(default=0, ge=0)
+    position_y: int = Field(default=0, ge=0)
+    width: int = Field(default=4, ge=1, le=12)
+    height: int = Field(default=3, ge=1)
+    config: Dict[str, Any]
+
+
+class WidgetUpdate(BaseModel):
+    title: Optional[str] = Field(None, min_length=1, max_length=200)
+    position_x: Optional[int] = Field(None, ge=0)
+    position_y: Optional[int] = Field(None, ge=0)
+    width: Optional[int] = Field(None, ge=1, le=12)
+    height: Optional[int] = Field(None, ge=1)
+    config: Optional[Dict[str, Any]] = None
+
+
+class WidgetResponse(BaseModel):
+    id: int
+    dashboard_id: int
+    widget_type: WidgetType
+    title: str
+    position_x: int
+    position_y: int
+    width: int
+    height: int
+    config: Dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+
+
+class DashboardWithWidgets(DashboardResponse):
+    widgets: List[WidgetResponse] = []
+
+
+class SavedQueryCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = None
+    is_public: bool = False
+    query_config: Dict[str, Any]
+
+
+class SavedQueryUpdate(BaseModel):
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    description: Optional[str] = None
+    is_public: Optional[bool] = None
+    query_config: Optional[Dict[str, Any]] = None
+
+
+class SavedQueryResponse(BaseModel):
+    id: int
+    name: str
+    description: Optional[str]
+    owner_id: int
+    is_public: bool
+    query_config: Dict[str, Any]
+    created_at: datetime
+    updated_at: datetime
+
+
+class WidgetDataRequest(BaseModel):
+    start_time: Optional[datetime] = None
+    end_time: Optional[datetime] = None
+
+
+class WidgetBatchUpdate(BaseModel):
+    widgets: List[Dict[str, Any]]  # List of {id, position_x, position_y, width, height}

@@ -27,6 +27,8 @@ backend/*.db-wal
 backend/.pytest_cache
 backend/.mypy_cache
 backend/.ruff_cache
+backend/.secret_key
+backend/data/
 
 # Frontend
 frontend/node_modules

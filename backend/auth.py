@@ -1,5 +1,6 @@
 import secrets
 import os
+import sys
 from pathlib import Path
 from passlib.context import CryptContext
 from jose import JWTError, jwt
@@ -7,27 +8,40 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 # Configuration
-# Generate or load a persistent secret key
-SECRET_KEY_FILE = Path(__file__).parent / ".secret_key"
-
-
-def get_or_create_secret_key() -> str:
-    """Get existing secret key or create a new one"""
-    if SECRET_KEY_FILE.exists():
-        with open(SECRET_KEY_FILE, "r") as f:
-            return f.read().strip()
-    else:
-        # Generate new secret key
-        new_key = secrets.token_urlsafe(32)
-        with open(SECRET_KEY_FILE, "w") as f:
-            f.write(new_key)
-        print(f"Generated new secret key at {SECRET_KEY_FILE}")
-        return new_key
-
-
-SECRET_KEY = get_or_create_secret_key()
 ALGORITHM = "HS256"
 ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+
+# JWT Secret Key - MUST be set via environment variable
+SECRET_KEY = os.getenv("JLO_SECRET_KEY")
+
+if not SECRET_KEY:
+    # Check for legacy .secret_key file for backward compatibility
+    SECRET_KEY_FILE = Path(__file__).parent / ".secret_key"
+    if SECRET_KEY_FILE.exists():
+        with open(SECRET_KEY_FILE, "r") as f:
+            SECRET_KEY = f.read().strip()
+        print("=" * 70)
+        print("⚠️  WARNING: Using legacy .secret_key file")
+        print("⚠️  Please migrate to environment variable for security:")
+        print(f"⚠️  export JLO_SECRET_KEY={SECRET_KEY}")
+        print("⚠️  Then delete the .secret_key file")
+        print("=" * 70)
+    else:
+        # No secret key found - fail fast
+        print("=" * 70)
+        print("❌ CRITICAL: JLO_SECRET_KEY environment variable not set!")
+        print("")
+        print("Generate a secure secret key with:")
+        print("  openssl rand -hex 32")
+        print("")
+        print("Then set it as an environment variable:")
+        print("  export JLO_SECRET_KEY=your_generated_key_here")
+        print("")
+        print("For Docker deployments, add to docker-compose.yml:")
+        print("  environment:")
+        print("    - JLO_SECRET_KEY=${JLO_SECRET_KEY}")
+        print("=" * 70)
+        sys.exit(1)
 
 # Use argon2 instead of bcrypt for Python 3.14 compatibility
 pwd_context = CryptContext(

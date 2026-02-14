@@ -1,6 +1,7 @@
 import sqlite3
 import json
 import os
+import re
 from datetime import datetime
 from typing import Optional, List, Dict, Any, Union
 from contextlib import contextmanager
@@ -8,6 +9,18 @@ from pathlib import Path
 
 
 DATABASE_PATH = os.getenv("JLO_DB_PATH", "jlo.db")
+
+
+def validate_tag_key(tag_key: str) -> bool:
+    """
+    Validate tag key to prevent SQL injection.
+    Only allows alphanumeric characters, underscores, hyphens, and dots.
+    This prevents injection via json_extract path parameter.
+    """
+    if not tag_key:
+        return False
+    # Allow alphanumeric, underscore, hyphen, and dot (common in tag keys)
+    return bool(re.match(r"^[a-zA-Z0-9_\-\.]+$", tag_key))
 
 
 @contextmanager
@@ -74,11 +87,13 @@ def init_database():
 
 
 # App operations
-def create_app(name: str) -> int:
+def create_app(name: str, environment: str = "production") -> int:
     """Create a new application"""
     with get_db() as conn:
         cursor = conn.cursor()
-        cursor.execute("INSERT INTO apps (name) VALUES (?)", (name,))
+        cursor.execute(
+            "INSERT INTO apps (name, environment) VALUES (?, ?)", (name, environment)
+        )
         return cursor.lastrowid
 
 
@@ -106,6 +121,34 @@ def list_apps() -> List[Dict[str, Any]]:
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM apps ORDER BY created_at DESC")
         return [dict(row) for row in cursor.fetchall()]
+
+
+def update_app(
+    app_id: int, name: Optional[str] = None, environment: Optional[str] = None
+) -> bool:
+    """Update an application"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Build update query dynamically
+        updates = []
+        params = []
+
+        if name is not None:
+            updates.append("name = ?")
+            params.append(name)
+        if environment is not None:
+            updates.append("environment = ?")
+            params.append(environment)
+
+        if not updates:
+            return True
+
+        params.append(app_id)
+        query = f"UPDATE apps SET {', '.join(updates)} WHERE id = ?"
+
+        cursor.execute(query, params)
+        return cursor.rowcount > 0
 
 
 # API Key operations
@@ -385,6 +428,11 @@ def query_logs(
         # Filter by tags
         if tags:
             for tag_key, tag_value in tags.items():
+                # Validate tag_key to prevent SQL injection
+                if not validate_tag_key(tag_key):
+                    raise ValueError(
+                        f"Invalid tag key format: {tag_key}. Only alphanumeric, underscore, hyphen, and dot characters are allowed."
+                    )
                 query += f" AND json_extract(l.tags, '$.{tag_key}') = ?"
                 params.append(tag_value)
 
@@ -451,6 +499,11 @@ def count_logs(
         # Filter by tags
         if tags:
             for tag_key, tag_value in tags.items():
+                # Validate tag_key to prevent SQL injection
+                if not validate_tag_key(tag_key):
+                    raise ValueError(
+                        f"Invalid tag key format: {tag_key}. Only alphanumeric, underscore, hyphen, and dot characters are allowed."
+                    )
                 query += f" AND json_extract(tags, '$.{tag_key}') = ?"
                 params.append(tag_value)
 
@@ -1291,3 +1344,583 @@ def list_retention_runs(limit: int = 20, offset: int = 0) -> List[Dict[str, Any]
             (limit, offset),
         )
         return [dict(row) for row in cursor.fetchall()]
+
+
+# Environment Retention Policy operations
+def create_environment_retention_policy(
+    environment: str,
+    priority_tier: str,
+    retention_type: str,
+    retention_days: Optional[int] = None,
+    retention_count: Optional[int] = None,
+    enabled: bool = True,
+) -> int:
+    """Create a new environment retention policy"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO environment_retention_policies 
+            (environment, priority_tier, retention_type, retention_days, retention_count, enabled)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """,
+            (
+                environment,
+                priority_tier,
+                retention_type,
+                retention_days,
+                retention_count,
+                enabled,
+            ),
+        )
+        return cursor.lastrowid
+
+
+def get_environment_retention_policies(
+    environment: Optional[str] = None,
+) -> List[Dict[str, Any]]:
+    """Get environment retention policies, optionally filtered by environment"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        if environment:
+            cursor.execute(
+                """
+                SELECT * FROM environment_retention_policies 
+                WHERE environment = ? 
+                ORDER BY 
+                    CASE priority_tier 
+                        WHEN 'high' THEN 1 
+                        WHEN 'medium' THEN 2 
+                        WHEN 'low' THEN 3 
+                        ELSE 4 
+                    END
+            """,
+                (environment,),
+            )
+        else:
+            cursor.execute(
+                """
+                SELECT * FROM environment_retention_policies 
+                ORDER BY environment, 
+                    CASE priority_tier 
+                        WHEN 'high' THEN 1 
+                        WHEN 'medium' THEN 2 
+                        WHEN 'low' THEN 3 
+                        ELSE 4 
+                    END
+            """
+            )
+        return [dict(row) for row in cursor.fetchall()]
+
+
+def update_environment_retention_policy(
+    policy_id: int,
+    retention_type: Optional[str] = None,
+    retention_days: Optional[int] = None,
+    retention_count: Optional[int] = None,
+    enabled: Optional[bool] = None,
+) -> bool:
+    """Update an environment retention policy"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Build update query dynamically
+        updates = []
+        params = []
+
+        if retention_type is not None:
+            updates.append("retention_type = ?")
+            params.append(retention_type)
+        if retention_days is not None:
+            updates.append("retention_days = ?")
+            params.append(retention_days)
+        if retention_count is not None:
+            updates.append("retention_count = ?")
+            params.append(retention_count)
+        if enabled is not None:
+            updates.append("enabled = ?")
+            params.append(enabled)
+
+        if not updates:
+            return True
+
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        params.append(policy_id)
+
+        query = f"""
+            UPDATE environment_retention_policies 
+            SET {", ".join(updates)}
+            WHERE id = ?
+        """
+
+        cursor.execute(query, params)
+        return cursor.rowcount > 0
+
+
+def delete_environment_retention_policy(policy_id: int) -> bool:
+    """Delete an environment retention policy"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM environment_retention_policies WHERE id = ?", (policy_id,)
+        )
+        return cursor.rowcount > 0
+
+
+def get_effective_retention_policy(
+    app_id: int, priority_tier: str
+) -> Optional[Dict[str, Any]]:
+    """
+    Get the effective retention policy for an app and priority tier.
+
+    Lookup order:
+    1. App-specific policy (if exists)
+    2. Environment-based policy (if exists)
+    3. Global default policy
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # First, try app-specific policy
+        cursor.execute(
+            """
+            SELECT * FROM retention_policies 
+            WHERE app_id = ? AND priority_tier = ? AND enabled = 1
+        """,
+            (app_id, priority_tier),
+        )
+        policy = cursor.fetchone()
+        if policy:
+            return dict(policy)
+
+        # Second, try environment-based policy
+        cursor.execute("SELECT environment FROM apps WHERE id = ?", (app_id,))
+        app = cursor.fetchone()
+        if app:
+            environment = app["environment"]
+            cursor.execute(
+                """
+                SELECT * FROM environment_retention_policies 
+                WHERE environment = ? AND priority_tier = ? AND enabled = 1
+            """,
+                (environment, priority_tier),
+            )
+            policy = cursor.fetchone()
+            if policy:
+                return dict(policy)
+
+        # Finally, try global default policy
+        cursor.execute(
+            """
+            SELECT * FROM retention_policies 
+            WHERE app_id IS NULL AND priority_tier = ? AND enabled = 1
+        """,
+            (priority_tier,),
+        )
+        policy = cursor.fetchone()
+        if policy:
+            return dict(policy)
+
+        return None
+
+
+# Dashboard operations
+def create_dashboard(
+    name: str,
+    owner_id: int,
+    description: Optional[str] = None,
+    is_public: bool = False,
+    layout_config: Optional[str] = None,
+    refresh_interval: int = 60,
+) -> int:
+    """Create a new dashboard"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO dashboards 
+            (name, description, owner_id, is_public, layout_config, refresh_interval)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """,
+            (name, description, owner_id, is_public, layout_config, refresh_interval),
+        )
+        return cursor.lastrowid
+
+
+def get_dashboard_by_id(dashboard_id: int, user_id: int) -> Optional[Dict[str, Any]]:
+    """Get dashboard by ID (check permissions)"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT * FROM dashboards 
+            WHERE id = ? AND (owner_id = ? OR is_public = 1)
+        """,
+            (dashboard_id, user_id),
+        )
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+
+def list_dashboards(user_id: int) -> List[Dict[str, Any]]:
+    """List all dashboards accessible to user (owned + public)"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT d.*, wu.username as owner_username
+            FROM dashboards d
+            JOIN web_users wu ON d.owner_id = wu.id
+            WHERE d.owner_id = ? OR d.is_public = 1
+            ORDER BY d.updated_at DESC
+        """,
+            (user_id,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+
+def update_dashboard(
+    dashboard_id: int,
+    owner_id: int,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    is_public: Optional[bool] = None,
+    layout_config: Optional[str] = None,
+    refresh_interval: Optional[int] = None,
+) -> bool:
+    """Update dashboard (only owner can update)"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Build update query dynamically
+        updates = []
+        params = []
+
+        if name is not None:
+            updates.append("name = ?")
+            params.append(name)
+        if description is not None:
+            updates.append("description = ?")
+            params.append(description)
+        if is_public is not None:
+            updates.append("is_public = ?")
+            params.append(is_public)
+        if layout_config is not None:
+            updates.append("layout_config = ?")
+            params.append(layout_config)
+        if refresh_interval is not None:
+            updates.append("refresh_interval = ?")
+            params.append(refresh_interval)
+
+        if not updates:
+            return True
+
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        params.extend([dashboard_id, owner_id])
+
+        query = f"""
+            UPDATE dashboards 
+            SET {", ".join(updates)}
+            WHERE id = ? AND owner_id = ?
+        """
+
+        cursor.execute(query, params)
+        return cursor.rowcount > 0
+
+
+def delete_dashboard(dashboard_id: int, owner_id: int) -> bool:
+    """Delete dashboard (only owner can delete)"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM dashboards WHERE id = ? AND owner_id = ?",
+            (dashboard_id, owner_id),
+        )
+        return cursor.rowcount > 0
+
+
+def duplicate_dashboard(
+    dashboard_id: int, user_id: int, new_name: str
+) -> Optional[int]:
+    """Duplicate a dashboard (accessible dashboards only)"""
+    # Get original dashboard
+    dashboard = get_dashboard_by_id(dashboard_id, user_id)
+    if not dashboard:
+        return None
+
+    # Create new dashboard
+    new_dashboard_id = create_dashboard(
+        name=new_name,
+        owner_id=user_id,
+        description=dashboard["description"],
+        is_public=False,  # Always private for duplicates
+        layout_config=dashboard["layout_config"],
+        refresh_interval=dashboard["refresh_interval"],
+    )
+
+    # Copy widgets
+    widgets = list_dashboard_widgets(dashboard_id)
+    for widget in widgets:
+        create_widget(
+            dashboard_id=new_dashboard_id,
+            widget_type=widget["widget_type"],
+            title=widget["title"],
+            position_x=widget["position_x"],
+            position_y=widget["position_y"],
+            width=widget["width"],
+            height=widget["height"],
+            config=widget["config"],
+        )
+
+    return new_dashboard_id
+
+
+# Widget operations
+def create_widget(
+    dashboard_id: int,
+    widget_type: str,
+    title: str,
+    position_x: int = 0,
+    position_y: int = 0,
+    width: int = 4,
+    height: int = 3,
+    config: str = "{}",
+) -> int:
+    """Create a new widget"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO dashboard_widgets 
+            (dashboard_id, widget_type, title, position_x, position_y, width, height, config)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+            (
+                dashboard_id,
+                widget_type,
+                title,
+                position_x,
+                position_y,
+                width,
+                height,
+                config,
+            ),
+        )
+        return cursor.lastrowid
+
+
+def get_widget_by_id(widget_id: int) -> Optional[Dict[str, Any]]:
+    """Get widget by ID"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM dashboard_widgets WHERE id = ?", (widget_id,))
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+
+def list_dashboard_widgets(dashboard_id: int) -> List[Dict[str, Any]]:
+    """List all widgets for a dashboard"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT * FROM dashboard_widgets 
+            WHERE dashboard_id = ?
+            ORDER BY position_y, position_x
+        """,
+            (dashboard_id,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+
+def update_widget(
+    widget_id: int,
+    title: Optional[str] = None,
+    position_x: Optional[int] = None,
+    position_y: Optional[int] = None,
+    width: Optional[int] = None,
+    height: Optional[int] = None,
+    config: Optional[str] = None,
+) -> bool:
+    """Update widget"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Build update query dynamically
+        updates = []
+        params = []
+
+        if title is not None:
+            updates.append("title = ?")
+            params.append(title)
+        if position_x is not None:
+            updates.append("position_x = ?")
+            params.append(position_x)
+        if position_y is not None:
+            updates.append("position_y = ?")
+            params.append(position_y)
+        if width is not None:
+            updates.append("width = ?")
+            params.append(width)
+        if height is not None:
+            updates.append("height = ?")
+            params.append(height)
+        if config is not None:
+            updates.append("config = ?")
+            params.append(config)
+
+        if not updates:
+            return True
+
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        params.append(widget_id)
+
+        query = f"""
+            UPDATE dashboard_widgets 
+            SET {", ".join(updates)}
+            WHERE id = ?
+        """
+
+        cursor.execute(query, params)
+        return cursor.rowcount > 0
+
+
+def delete_widget(widget_id: int) -> bool:
+    """Delete widget"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM dashboard_widgets WHERE id = ?", (widget_id,))
+        return cursor.rowcount > 0
+
+
+def batch_update_widgets(widgets: List[Dict[str, Any]]) -> bool:
+    """Batch update widget positions and sizes"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        for widget in widgets:
+            cursor.execute(
+                """
+                UPDATE dashboard_widgets 
+                SET position_x = ?, position_y = ?, width = ?, height = ?, 
+                    updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+            """,
+                (
+                    widget["position_x"],
+                    widget["position_y"],
+                    widget["width"],
+                    widget["height"],
+                    widget["id"],
+                ),
+            )
+        return True
+
+
+# Saved Query operations
+def create_saved_query(
+    name: str,
+    owner_id: int,
+    query_config: str,
+    description: Optional[str] = None,
+    is_public: bool = False,
+) -> int:
+    """Create a new saved query"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO saved_queries 
+            (name, description, owner_id, is_public, query_config)
+            VALUES (?, ?, ?, ?, ?)
+        """,
+            (name, description, owner_id, is_public, query_config),
+        )
+        return cursor.lastrowid
+
+
+def get_saved_query_by_id(query_id: int, user_id: int) -> Optional[Dict[str, Any]]:
+    """Get saved query by ID (check permissions)"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT * FROM saved_queries 
+            WHERE id = ? AND (owner_id = ? OR is_public = 1)
+        """,
+            (query_id, user_id),
+        )
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+
+def list_saved_queries(user_id: int) -> List[Dict[str, Any]]:
+    """List all saved queries accessible to user (owned + public)"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT sq.*, wu.username as owner_username
+            FROM saved_queries sq
+            JOIN web_users wu ON sq.owner_id = wu.id
+            WHERE sq.owner_id = ? OR sq.is_public = 1
+            ORDER BY sq.updated_at DESC
+        """,
+            (user_id,),
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+
+def update_saved_query(
+    query_id: int,
+    owner_id: int,
+    name: Optional[str] = None,
+    description: Optional[str] = None,
+    is_public: Optional[bool] = None,
+    query_config: Optional[str] = None,
+) -> bool:
+    """Update saved query (only owner can update)"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Build update query dynamically
+        updates = []
+        params = []
+
+        if name is not None:
+            updates.append("name = ?")
+            params.append(name)
+        if description is not None:
+            updates.append("description = ?")
+            params.append(description)
+        if is_public is not None:
+            updates.append("is_public = ?")
+            params.append(is_public)
+        if query_config is not None:
+            updates.append("query_config = ?")
+            params.append(query_config)
+
+        if not updates:
+            return True
+
+        updates.append("updated_at = CURRENT_TIMESTAMP")
+        params.extend([query_id, owner_id])
+
+        query = f"""
+            UPDATE saved_queries 
+            SET {", ".join(updates)}
+            WHERE id = ? AND owner_id = ?
+        """
+
+        cursor.execute(query, params)
+        return cursor.rowcount > 0
+
+
+def delete_saved_query(query_id: int, owner_id: int) -> bool:
+    """Delete saved query (only owner can delete)"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "DELETE FROM saved_queries WHERE id = ? AND owner_id = ?",
+            (query_id, owner_id),
+        )
+        return cursor.rowcount > 0

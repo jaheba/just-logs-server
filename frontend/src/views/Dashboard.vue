@@ -682,7 +682,7 @@ export default {
 .logs-container {
   flex: 1;
   overflow-y: auto;
-  padding: 0.5rem 0.75rem;
+  padding: 0.2rem 0.4rem;
   background: var(--bg-secondary, #1a1a1a);
 }
 

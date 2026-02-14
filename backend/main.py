@@ -6,7 +6,11 @@ from typing import Optional, List, AsyncIterator, Dict
 from datetime import datetime, timedelta
 import asyncio
 import json
+import os
 from pathlib import Path
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 from models import (
     LogCreate,
@@ -14,7 +18,9 @@ from models import (
     LogResponse,
     LogQuery,
     AppCreate,
+    AppUpdate,
     AppResponse,
+    Environment,
     ApiKeyCreate,
     ApiKeyResponse,
     LoginRequest,
@@ -26,10 +32,25 @@ from models import (
     PasswordResetRequest,
     RetentionPolicyCreate,
     RetentionPolicyUpdate,
+    EnvironmentRetentionPolicyCreate,
+    EnvironmentRetentionPolicyUpdate,
+    DashboardCreate,
+    DashboardUpdate,
+    DashboardResponse,
+    DashboardWithWidgets,
+    WidgetCreate,
+    WidgetUpdate,
+    WidgetResponse,
+    WidgetDataRequest,
+    WidgetBatchUpdate,
+    SavedQueryCreate,
+    SavedQueryUpdate,
+    SavedQueryResponse,
 )
 from database import (
     init_database,
     create_app,
+    update_app,
     get_app_by_id,
     get_app_by_name,
     list_apps,
@@ -51,6 +72,27 @@ from database import (
     update_user_password,
     update_last_login,
     delete_web_user,
+    create_dashboard,
+    get_dashboard_by_id,
+    list_dashboards,
+    update_dashboard,
+    delete_dashboard,
+    duplicate_dashboard,
+    create_widget,
+    get_widget_by_id,
+    list_dashboard_widgets,
+    update_widget,
+    delete_widget,
+    batch_update_widgets,
+    create_saved_query,
+    get_saved_query_by_id,
+    list_saved_queries,
+    update_saved_query,
+    delete_saved_query,
+    create_environment_retention_policy,
+    get_environment_retention_policies,
+    update_environment_retention_policy,
+    delete_environment_retention_policy,
 )
 from write_queue import get_log_writer
 from auth import (
@@ -62,6 +104,31 @@ from auth import (
 )
 
 app = FastAPI(title="jlo - Just Logs", version="1.0.0")
+
+# Rate limiter setup for brute force protection
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
+
+def is_request_secure(request: Request) -> bool:
+    """
+    Determine if request came through HTTPS.
+    Checks X-Forwarded-Proto header (from reverse proxy) and direct scheme.
+    Returns False in development mode (JLO_ENV=development) for convenience.
+    """
+    # Allow HTTP in development mode
+    if os.getenv("JLO_ENV", "production").lower() == "development":
+        return False
+
+    # Check X-Forwarded-Proto header from reverse proxy
+    proto = request.headers.get("x-forwarded-proto", "").lower()
+    if proto == "https":
+        return True
+
+    # Fallback to direct scheme check
+    return request.url.scheme == "https"
+
 
 # CORS middleware for development
 # Note: allow_origins must be specific when using allow_credentials=True
@@ -84,17 +151,35 @@ app.add_middleware(
 async def startup_event():
     init_database()
 
-    # Create default admin user if not exists (username: admin, password: admin)
+    # Create default admin user if not exists
+    # Password MUST be set via JLO_ADMIN_PASSWORD environment variable
     if not get_web_user("admin"):
-        create_web_user(
-            username="admin",
-            password_hash=hash_password("admin"),
-            email="admin@example.com",
-            full_name="Administrator",
-            role=UserRole.ADMIN.value,
-            is_active=True,
-        )
-        print("Created default admin user (username: admin, password: admin)")
+        admin_password = os.getenv("JLO_ADMIN_PASSWORD")
+
+        if not admin_password:
+            print("=" * 70)
+            print("⚠️  WARNING: No admin user exists and JLO_ADMIN_PASSWORD not set!")
+            print("⚠️  Please set JLO_ADMIN_PASSWORD environment variable to create")
+            print("⚠️  the initial admin account.")
+            print("")
+            print("Example:")
+            print("  export JLO_ADMIN_PASSWORD='your_secure_password_here'")
+            print("")
+            print("For production, use a strong password with:")
+            print("  - At least 12 characters")
+            print("  - Mix of uppercase, lowercase, numbers, and symbols")
+            print("=" * 70)
+        else:
+            create_web_user(
+                username="admin",
+                password_hash=hash_password(admin_password),
+                email="admin@example.com",
+                full_name="Administrator",
+                role=UserRole.ADMIN.value,
+                is_active=True,
+            )
+            print("✅ Created admin user (username: admin)")
+            print("⚠️  Remember to change the password after first login!")
 
     # Create default retention policies if they don't exist
     from database import get_retention_policies_for_app, create_retention_policy
@@ -236,6 +321,7 @@ sse_connections: List[asyncio.Queue] = []
 # Log ingestion endpoints (require API key)
 # NOTE: Changed to 202 Accepted - logs are queued for async processing
 @app.post("/api/logs", status_code=202)
+@limiter.limit("1000/minute")  # Max 1000 log requests per minute per IP
 async def ingest_logs(
     request: Request, api_key_data: dict = Depends(verify_api_key_header)
 ):
@@ -244,6 +330,7 @@ async def ingest_logs(
 
     Logs are queued for async batch processing for high throughput.
     Returns 202 Accepted immediately (non-blocking).
+    Rate limited to prevent log flooding DoS attacks.
     """
     # Parse the body to determine if it's a single log or array
     body = await request.json()
@@ -326,14 +413,18 @@ async def ingest_logs(
 
 
 @app.post("/api/logs/batch", status_code=202)
+@limiter.limit("100/minute")  # Max 100 batch requests per minute per IP
 async def ingest_logs_batch(
-    batch: LogBatchCreate, api_key_data: dict = Depends(verify_api_key_header)
+    request: Request,
+    batch: LogBatchCreate,
+    api_key_data: dict = Depends(verify_api_key_header),
 ):
     """
     Ingest multiple log entries (batch endpoint).
 
     Logs are queued for async batch processing for high throughput.
     Returns 202 Accepted immediately (non-blocking).
+    Rate limited to prevent log flooding DoS attacks.
     """
     # Get API key tags
     api_key_tags = api_key_data.get("tags", {})
@@ -399,8 +490,9 @@ async def ingest_logs_batch(
 
 # Authentication endpoints
 @app.post("/api/auth/login")
-async def login(credentials: LoginRequest, response: Response):
-    """Web UI login"""
+@limiter.limit("5/minute")  # Max 5 login attempts per minute per IP
+async def login(request: Request, credentials: LoginRequest, response: Response):
+    """Web UI login with rate limiting to prevent brute force attacks"""
     user = get_web_user(credentials.username)
     if not user or not verify_password(credentials.password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Invalid credentials")
@@ -413,15 +505,15 @@ async def login(credentials: LoginRequest, response: Response):
 
     access_token = create_access_token(data={"sub": user["username"]})
 
-    # Set HTTP-only cookie
+    # Set HTTP-only cookie with secure flag (auto-detects HTTPS)
     response.set_cookie(
         key="session_token",
         value=access_token,
         httponly=True,
+        secure=is_request_secure(request),  # True in production HTTPS, False in dev
         max_age=60 * 60 * 24,  # 24 hours
-        samesite="lax",
+        samesite="strict",  # Upgraded from "lax" for better security
         path="/",
-        # Note: secure=True should be used in production with HTTPS
     )
 
     return {
@@ -841,10 +933,13 @@ async def delete_user(user_id: int, admin: dict = Depends(require_admin)):
 
 # Password management endpoints
 @app.post("/api/auth/change-password")
+@limiter.limit("10/minute")  # Max 10 password change attempts per minute per IP
 async def change_password(
-    password_data: PasswordChangeRequest, user: dict = Depends(verify_web_session)
+    request: Request,
+    password_data: PasswordChangeRequest,
+    user: dict = Depends(verify_web_session),
 ):
-    """Change own password"""
+    """Change own password with rate limiting"""
     # Verify current password
     if not verify_password(password_data.current_password, user["password_hash"]):
         raise HTTPException(status_code=401, detail="Current password is incorrect")
@@ -1063,6 +1158,497 @@ async def get_retention_run_endpoint(
         raise HTTPException(status_code=404, detail="Retention run not found")
 
     return run
+
+
+# ============================================================
+# Dashboard Endpoints
+# ============================================================
+
+
+@app.post("/api/dashboards", response_model=DashboardResponse, status_code=201)
+async def create_new_dashboard(
+    dashboard: DashboardCreate, user: dict = Depends(verify_web_session)
+):
+    """Create a new dashboard"""
+    dashboard_id = create_dashboard(
+        name=dashboard.name,
+        owner_id=user["id"],
+        description=dashboard.description,
+        is_public=dashboard.is_public,
+        layout_config=json.dumps(dashboard.layout_config)
+        if dashboard.layout_config
+        else None,
+        refresh_interval=dashboard.refresh_interval,
+    )
+
+    created = get_dashboard_by_id(dashboard_id, user["id"])
+    if not created:
+        raise HTTPException(status_code=500, detail="Failed to create dashboard")
+
+    # Parse JSON fields
+    if created["layout_config"]:
+        created["layout_config"] = json.loads(created["layout_config"])
+
+    return created
+
+
+@app.get("/api/dashboards", response_model=List[DashboardResponse])
+async def get_dashboards(user: dict = Depends(verify_web_session)):
+    """List all dashboards accessible to the user"""
+    dashboards = list_dashboards(user["id"])
+
+    # Parse JSON fields
+    for dashboard in dashboards:
+        if dashboard["layout_config"]:
+            dashboard["layout_config"] = json.loads(dashboard["layout_config"])
+
+    return dashboards
+
+
+@app.get("/api/dashboards/{dashboard_id}", response_model=DashboardWithWidgets)
+async def get_dashboard(dashboard_id: int, user: dict = Depends(verify_web_session)):
+    """Get dashboard by ID with all widgets"""
+    dashboard = get_dashboard_by_id(dashboard_id, user["id"])
+    if not dashboard:
+        raise HTTPException(
+            status_code=404, detail="Dashboard not found or access denied"
+        )
+
+    # Parse JSON fields
+    if dashboard["layout_config"]:
+        dashboard["layout_config"] = json.loads(dashboard["layout_config"])
+
+    # Get widgets
+    widgets = list_dashboard_widgets(dashboard_id)
+    for widget in widgets:
+        if widget["config"]:
+            widget["config"] = json.loads(widget["config"])
+
+    dashboard["widgets"] = widgets
+    return dashboard
+
+
+@app.put("/api/dashboards/{dashboard_id}", response_model=DashboardResponse)
+async def update_existing_dashboard(
+    dashboard_id: int,
+    dashboard: DashboardUpdate,
+    user: dict = Depends(verify_web_session),
+):
+    """Update dashboard (owner only)"""
+    existing = get_dashboard_by_id(dashboard_id, user["id"])
+    if not existing:
+        raise HTTPException(
+            status_code=404, detail="Dashboard not found or access denied"
+        )
+
+    if existing["owner_id"] != user["id"]:
+        raise HTTPException(
+            status_code=403, detail="Only the owner can update this dashboard"
+        )
+
+    success = update_dashboard(
+        dashboard_id=dashboard_id,
+        owner_id=user["id"],
+        name=dashboard.name,
+        description=dashboard.description,
+        is_public=dashboard.is_public,
+        layout_config=json.dumps(dashboard.layout_config)
+        if dashboard.layout_config
+        else None,
+        refresh_interval=dashboard.refresh_interval,
+    )
+
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update dashboard")
+
+    updated = get_dashboard_by_id(dashboard_id, user["id"])
+    if updated and updated["layout_config"]:
+        updated["layout_config"] = json.loads(updated["layout_config"])
+
+    return updated
+
+
+@app.delete("/api/dashboards/{dashboard_id}")
+async def delete_existing_dashboard(
+    dashboard_id: int, user: dict = Depends(verify_web_session)
+):
+    """Delete dashboard (owner only)"""
+    existing = get_dashboard_by_id(dashboard_id, user["id"])
+    if not existing:
+        raise HTTPException(
+            status_code=404, detail="Dashboard not found or access denied"
+        )
+
+    if existing["owner_id"] != user["id"]:
+        raise HTTPException(
+            status_code=403, detail="Only the owner can delete this dashboard"
+        )
+
+    success = delete_dashboard(dashboard_id, user["id"])
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete dashboard")
+
+    return {"message": "Dashboard deleted successfully"}
+
+
+@app.post("/api/dashboards/{dashboard_id}/duplicate", response_model=DashboardResponse)
+async def duplicate_existing_dashboard(
+    dashboard_id: int, new_name: str, user: dict = Depends(verify_web_session)
+):
+    """Duplicate a dashboard"""
+    new_id = duplicate_dashboard(dashboard_id, user["id"], new_name)
+    if not new_id:
+        raise HTTPException(
+            status_code=404, detail="Dashboard not found or access denied"
+        )
+
+    duplicated = get_dashboard_by_id(new_id, user["id"])
+    if duplicated and duplicated["layout_config"]:
+        duplicated["layout_config"] = json.loads(duplicated["layout_config"])
+
+    return duplicated
+
+
+# Widget endpoints
+
+
+@app.post(
+    "/api/dashboards/{dashboard_id}/widgets",
+    response_model=WidgetResponse,
+    status_code=201,
+)
+async def create_new_widget(
+    dashboard_id: int, widget: WidgetCreate, user: dict = Depends(verify_web_session)
+):
+    """Create a new widget"""
+    # Verify user has access to dashboard
+    dashboard = get_dashboard_by_id(dashboard_id, user["id"])
+    if not dashboard:
+        raise HTTPException(
+            status_code=404, detail="Dashboard not found or access denied"
+        )
+
+    # Only owner can add widgets
+    if dashboard["owner_id"] != user["id"]:
+        raise HTTPException(
+            status_code=403, detail="Only the owner can add widgets to this dashboard"
+        )
+
+    widget_id = create_widget(
+        dashboard_id=dashboard_id,
+        widget_type=widget.widget_type.value,
+        title=widget.title,
+        position_x=widget.position_x,
+        position_y=widget.position_y,
+        width=widget.width,
+        height=widget.height,
+        config=json.dumps(widget.config),
+    )
+
+    created = get_widget_by_id(widget_id)
+    if not created:
+        raise HTTPException(status_code=500, detail="Failed to create widget")
+
+    if created["config"]:
+        created["config"] = json.loads(created["config"])
+
+    return created
+
+
+@app.put("/api/widgets/{widget_id}", response_model=WidgetResponse)
+async def update_existing_widget(
+    widget_id: int, widget: WidgetUpdate, user: dict = Depends(verify_web_session)
+):
+    """Update widget"""
+    existing = get_widget_by_id(widget_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Widget not found")
+
+    # Verify user has access to dashboard
+    dashboard = get_dashboard_by_id(existing["dashboard_id"], user["id"])
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Dashboard not found")
+
+    # Only owner can update widgets
+    if dashboard["owner_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Only the owner can update widgets")
+
+    success = update_widget(
+        widget_id=widget_id,
+        title=widget.title,
+        position_x=widget.position_x,
+        position_y=widget.position_y,
+        width=widget.width,
+        height=widget.height,
+        config=json.dumps(widget.config) if widget.config else None,
+    )
+
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update widget")
+
+    updated = get_widget_by_id(widget_id)
+    if updated and updated["config"]:
+        updated["config"] = json.loads(updated["config"])
+
+    return updated
+
+
+@app.delete("/api/widgets/{widget_id}")
+async def delete_existing_widget(
+    widget_id: int, user: dict = Depends(verify_web_session)
+):
+    """Delete widget"""
+    existing = get_widget_by_id(widget_id)
+    if not existing:
+        raise HTTPException(status_code=404, detail="Widget not found")
+
+    # Verify user has access to dashboard
+    dashboard = get_dashboard_by_id(existing["dashboard_id"], user["id"])
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Dashboard not found")
+
+    # Only owner can delete widgets
+    if dashboard["owner_id"] != user["id"]:
+        raise HTTPException(status_code=403, detail="Only the owner can delete widgets")
+
+    success = delete_widget(widget_id)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete widget")
+
+    return {"message": "Widget deleted successfully"}
+
+
+@app.put("/api/widgets/batch")
+async def batch_update_widget_positions(
+    batch: WidgetBatchUpdate, user: dict = Depends(verify_web_session)
+):
+    """Batch update widget positions (for drag & drop)"""
+    # Verify all widgets belong to dashboards the user owns
+    for widget_data in batch.widgets:
+        widget = get_widget_by_id(widget_data["id"])
+        if not widget:
+            raise HTTPException(
+                status_code=404, detail=f"Widget {widget_data['id']} not found"
+            )
+
+        dashboard = get_dashboard_by_id(widget["dashboard_id"], user["id"])
+        if not dashboard or dashboard["owner_id"] != user["id"]:
+            raise HTTPException(
+                status_code=403, detail="Access denied to modify widgets"
+            )
+
+    success = batch_update_widgets(batch.widgets)
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to batch update widgets")
+
+    return {"message": "Widgets updated successfully"}
+
+
+@app.post("/api/widgets/{widget_id}/data")
+async def get_widget_data(
+    widget_id: int,
+    data_request: WidgetDataRequest,
+    user: dict = Depends(verify_web_session),
+):
+    """Get data for a widget"""
+    widget = get_widget_by_id(widget_id)
+    if not widget:
+        raise HTTPException(status_code=404, detail="Widget not found")
+
+    # Verify user has access to dashboard
+    dashboard = get_dashboard_by_id(widget["dashboard_id"], user["id"])
+    if not dashboard:
+        raise HTTPException(status_code=404, detail="Dashboard not found")
+
+    # Parse widget config
+    config = json.loads(widget["config"]) if widget["config"] else {}
+
+    # Get widget type and fetch data accordingly
+    widget_type = widget["widget_type"]
+
+    if widget_type == "metric":
+        # Fetch metric data
+        query_config = config.get("query", {})
+        metric_type = config.get("metric_type", "count")
+
+        # Build query parameters
+        app_id = query_config.get("app_id")
+        level = query_config.get("level")
+        search = query_config.get("search")
+
+        if metric_type == "count":
+            count = count_logs(
+                app_id=app_id,
+                level=level,
+                search=search,
+                start_time=data_request.start_time,
+                end_time=data_request.end_time,
+            )
+            return {
+                "widget_id": widget_id,
+                "data": {"value": count},
+                "metadata": {"last_updated": datetime.utcnow().isoformat()},
+            }
+
+    elif widget_type == "chart":
+        # Fetch chart data (time series)
+        query_config = config.get("query", {})
+        logs = query_logs(
+            app_id=query_config.get("app_id"),
+            level=query_config.get("level"),
+            search=query_config.get("search"),
+            start_time=data_request.start_time,
+            end_time=data_request.end_time,
+            limit=1000,
+        )
+
+        # Group by time bucket (simplified for MVP)
+        # TODO: Implement proper time bucketing
+        return {
+            "widget_id": widget_id,
+            "data": {"labels": [], "datasets": []},
+            "metadata": {
+                "last_updated": datetime.utcnow().isoformat(),
+                "total": len(logs),
+            },
+        }
+
+    elif widget_type == "table":
+        # Fetch table data
+        query_config = config.get("query", {})
+        limit = config.get("limit", 50)
+
+        logs = query_logs(
+            app_id=query_config.get("app_id"),
+            level=query_config.get("level"),
+            search=query_config.get("search"),
+            start_time=data_request.start_time,
+            end_time=data_request.end_time,
+            limit=limit,
+        )
+
+        return {
+            "widget_id": widget_id,
+            "data": {"logs": logs},
+            "metadata": {
+                "last_updated": datetime.utcnow().isoformat(),
+                "total": len(logs),
+            },
+        }
+
+    return {"widget_id": widget_id, "data": {}, "metadata": {}}
+
+
+# Saved Query endpoints
+
+
+@app.post("/api/saved-queries", response_model=SavedQueryResponse, status_code=201)
+async def create_new_saved_query(
+    query: SavedQueryCreate, user: dict = Depends(verify_web_session)
+):
+    """Create a new saved query"""
+    query_id = create_saved_query(
+        name=query.name,
+        owner_id=user["id"],
+        query_config=json.dumps(query.query_config),
+        description=query.description,
+        is_public=query.is_public,
+    )
+
+    created = get_saved_query_by_id(query_id, user["id"])
+    if not created:
+        raise HTTPException(status_code=500, detail="Failed to create saved query")
+
+    if created["query_config"]:
+        created["query_config"] = json.loads(created["query_config"])
+
+    return created
+
+
+@app.get("/api/saved-queries", response_model=List[SavedQueryResponse])
+async def get_saved_queries(user: dict = Depends(verify_web_session)):
+    """List all saved queries accessible to the user"""
+    queries = list_saved_queries(user["id"])
+
+    # Parse JSON fields
+    for query in queries:
+        if query["query_config"]:
+            query["query_config"] = json.loads(query["query_config"])
+
+    return queries
+
+
+@app.get("/api/saved-queries/{query_id}", response_model=SavedQueryResponse)
+async def get_saved_query(query_id: int, user: dict = Depends(verify_web_session)):
+    """Get saved query by ID"""
+    query = get_saved_query_by_id(query_id, user["id"])
+    if not query:
+        raise HTTPException(
+            status_code=404, detail="Saved query not found or access denied"
+        )
+
+    if query["query_config"]:
+        query["query_config"] = json.loads(query["query_config"])
+
+    return query
+
+
+@app.put("/api/saved-queries/{query_id}", response_model=SavedQueryResponse)
+async def update_existing_saved_query(
+    query_id: int, query: SavedQueryUpdate, user: dict = Depends(verify_web_session)
+):
+    """Update saved query (owner only)"""
+    existing = get_saved_query_by_id(query_id, user["id"])
+    if not existing:
+        raise HTTPException(
+            status_code=404, detail="Saved query not found or access denied"
+        )
+
+    if existing["owner_id"] != user["id"]:
+        raise HTTPException(
+            status_code=403, detail="Only the owner can update this query"
+        )
+
+    success = update_saved_query(
+        query_id=query_id,
+        owner_id=user["id"],
+        name=query.name,
+        description=query.description,
+        is_public=query.is_public,
+        query_config=json.dumps(query.query_config) if query.query_config else None,
+    )
+
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to update saved query")
+
+    updated = get_saved_query_by_id(query_id, user["id"])
+    if updated and updated["query_config"]:
+        updated["query_config"] = json.loads(updated["query_config"])
+
+    return updated
+
+
+@app.delete("/api/saved-queries/{query_id}")
+async def delete_existing_saved_query(
+    query_id: int, user: dict = Depends(verify_web_session)
+):
+    """Delete saved query (owner only)"""
+    existing = get_saved_query_by_id(query_id, user["id"])
+    if not existing:
+        raise HTTPException(
+            status_code=404, detail="Saved query not found or access denied"
+        )
+
+    if existing["owner_id"] != user["id"]:
+        raise HTTPException(
+            status_code=403, detail="Only the owner can delete this query"
+        )
+
+    success = delete_saved_query(query_id, user["id"])
+    if not success:
+        raise HTTPException(status_code=500, detail="Failed to delete saved query")
+
+    return {"message": "Saved query deleted successfully"}
 
 
 # Health check

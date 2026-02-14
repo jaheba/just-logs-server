@@ -12,6 +12,10 @@
             Events
           </router-link>
           
+          <router-link to="/dashboards" class="nav-link" :class="{ active: $route.path.startsWith('/dashboards') }">
+            Dashboards
+          </router-link>
+          
           <router-link to="/apps" class="nav-link" :class="{ active: $route.path === '/apps' }">
             Apps
           </router-link>

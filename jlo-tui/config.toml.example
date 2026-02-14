@@ -1,0 +1,39 @@
+# Example configuration file for jlo-tui
+# Copy this file to ~/.config/jlo-tui/config.toml and customize
+
+# Server connection
+server_url = "http://localhost:8000"
+
+# Optional: Pre-fill username
+# Password is prompted interactively for security
+# For automation, use the JLO_PASSWORD environment variable instead
+username = "admin"
+
+[ui]
+# Auto-refresh interval in milliseconds (when not in tail mode)
+refresh_interval_ms = 5000
+
+# Number of logs to fetch per request
+page_size = 100
+
+# Maximum logs to keep in memory (prevents memory issues with large datasets)
+max_logs_in_memory = 10000
+
+# Date/time format using strftime format
+# Common formats:
+#   "%Y-%m-%d %H:%M:%S"        -> 2024-02-14 15:30:45
+#   "%b %d %H:%M:%S"           -> Feb 14 15:30:45
+#   "%Y-%m-%dT%H:%M:%S%z"      -> 2024-02-14T15:30:45+0000
+date_format = "%Y-%m-%d %H:%M:%S"
+
+# Enable colored log levels
+enable_colors = true
+
+[colors]
+# Colors for log levels
+# Available colors: red, yellow, green, blue, magenta, cyan, white, gray
+error = "red"
+warn = "yellow"
+info = "green"
+debug = "blue"
+fatal = "magenta"

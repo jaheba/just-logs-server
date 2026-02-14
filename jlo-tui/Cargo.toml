@@ -1,0 +1,43 @@
+[package]
+name = "jlo-tui"
+version = "0.1.0"
+edition = "2021"
+authors = ["Just Logs Contributors"]
+description = "Terminal UI for just-logs server"
+
+[dependencies]
+# TUI framework
+ratatui = "0.28"
+crossterm = "0.28"
+
+# Async runtime
+tokio = { version = "1", features = ["full"] }
+
+# HTTP client
+reqwest = { version = "0.12", features = ["json", "cookies"] }
+
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# SSE streaming
+eventsource-client = "0.13"
+futures-util = "0.3"
+
+# Configuration
+config = "0.14"
+toml = "0.8"
+dirs = "5.0"
+
+# CLI
+clap = { version = "4", features = ["derive", "env"] }
+
+# Error handling
+anyhow = "1.0"
+thiserror = "1.0"
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Utilities
+unicode-width = "0.1"

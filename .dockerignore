@@ -1,0 +1,85 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+dist
+build
+*.egg
+.venv
+venv
+ENV
+env
+
+# Backend
+backend/.venv
+backend/__pycache__
+backend/*.db
+backend/*.db-shm
+backend/*.db-wal
+backend/.pytest_cache
+backend/.mypy_cache
+backend/.ruff_cache
+
+# Frontend
+frontend/node_modules
+frontend/dist
+frontend/.vite
+frontend/.cache
+
+# Benchmark
+benchmark/target
+benchmark/Cargo.lock
+benchmark/__pycache__
+benchmark/*.log
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs
+*.pid
+*.seed
+*.pid.lock
+
+# Testing
+.coverage
+htmlcov
+.pytest_cache
+.tox
+
+# Documentation
+*.md
+docs/
+
+# Development
+.env
+.env.local
+.env.*.local
+*.tmp
+temp/
+tmp/
+
+# CI/CD
+.github
+.gitlab-ci.yml
+.travis.yml
+Jenkinsfile
+
+# Docker
+docker-compose.override.yml
+.dockerignore
+Dockerfile.dev

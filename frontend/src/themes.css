@@ -1,0 +1,994 @@
+/* ========================================
+   JLO LOGGING SERVER THEMES
+   Shared theme CSS for all pages
+   ======================================== */
+
+/* ========================================
+   THEME: LOGS (Default - Light)
+   Clean, professional log viewing theme
+   Colors: Neutral greys with semantic colors
+   ======================================== */
+:root {
+    /* Layout Variables */
+    --layout-sidebar-width: 200px;
+    --layout-sidebar-collapsed-width: 60px;
+    --layout-header-height: 60px;
+    --layout-filter-bar-height: 120px;
+    --table-row-height: 48px;
+    --table-header-height: 40px;
+
+    /* Structural Colors */
+    --color-primary: #667eea;
+    --color-secondary: #5a67d8;
+    --color-accent: #764ba2;
+
+    /* Semantic Colors */
+    --color-success: #28a745;
+    --color-failure: #dc3545;
+    --color-danger: #dc3545;
+    --color-danger-hover: #c82333;
+    --color-warning: #f39c12;
+    --color-info: #17a2b8;
+
+    /* Log Level Colors */
+    --level-debug: #6c757d;
+    --level-info: #17a2b8;
+    --level-warn: #f39c12;
+    --level-error: #dc3545;
+    --level-fatal: #6f0000;
+
+    /* Derived backgrounds */
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #e9ecef;
+    --bg-card: #ffffff;
+    --bg-sidebar: #1a1a1a;
+    --bg-sidebar-hover: #2a2a2a;
+    --bg-sidebar-active: #333333;
+
+    --text-primary: #333333;
+    --text-secondary: #555555;
+    --text-muted: #888888;
+    --text-sidebar: #ffffff;
+    --text-sidebar-muted: #b3b3b3;
+
+    --border-primary: #dddddd;
+    --border-secondary: #e0e0e0;
+    --border-color: #e0e0e0;
+
+    /* UI Element Colors */
+    --header-bg: #ffffff;
+    --header-text: var(--color-primary);
+    --header-shadow: rgba(0, 0, 0, 0.1);
+
+    --log-bg: #ffffff;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: rgba(0, 0, 0, 0.1);
+
+    --filter-bg: #ffffff;
+    --filter-shadow: rgba(0, 0, 0, 0.1);
+
+    --btn-primary-bg: var(--color-primary);
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover: var(--color-secondary);
+
+    --btn-secondary-bg: #6c757d;
+    --btn-secondary-text: #ffffff;
+    --btn-secondary-hover: #5a6268;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #ffffff;
+    --btn-danger-hover: #c82333;
+
+    --input-bg: #ffffff;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-primary);
+
+    --code-bg: #f8f9fa;
+    --code-text: #333333;
+
+    /* Additional UI Variables */
+    --bg-hover: #f8f9fa;
+    --bg-input: #ffffff;
+    --color-primary-dark: #5568d3;
+    
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    --theme-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+/* LOGS DARK */
+body.theme-logs-dark {
+    /* Structural Colors */
+    --color-primary: #7c8cf5;
+    --color-secondary: #6a7ae8;
+    --color-accent: #8b5fc7;
+
+    /* Semantic Colors */
+    --color-success: #32d44d;
+    --color-failure: #ff5555;
+    --color-danger: #ff5555;
+    --color-danger-hover: #ff3333;
+    --color-warning: #f39c12;
+    --color-info: #1fc8e3;
+
+    /* Log Level Colors */
+    --level-debug: #868e96;
+    --level-info: #1fc8e3;
+    --level-warn: #f39c12;
+    --level-error: #ff5555;
+    --level-fatal: #ff0000;
+
+    /* Derived backgrounds */
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #242424;
+    --bg-tertiary: #2e2e2e;
+    --bg-card: #2a2a2a;
+    --bg-sidebar: #0f0f0f;
+    --bg-sidebar-hover: #1f1f1f;
+    --bg-sidebar-active: #2a2a2a;
+
+    --text-primary: #e8e8e8;
+    --text-secondary: #b8b8b8;
+    --text-muted: #888888;
+    --text-sidebar: #e8e8e8;
+    --text-sidebar-muted: #888888;
+
+    --border-primary: #3a3a3a;
+    --border-secondary: #444444;
+    --border-color: #3a3a3a;
+
+    /* UI Element Colors */
+    --header-bg: #1f1f1f;
+    --header-text: var(--color-primary);
+    --header-shadow: rgba(0, 0, 0, 0.3);
+
+    --log-bg: #252525;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: rgba(0, 0, 0, 0.4);
+
+    --filter-bg: #252525;
+    --filter-shadow: rgba(0, 0, 0, 0.3);
+
+    --btn-primary-bg: var(--color-primary);
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover: var(--color-secondary);
+
+    --btn-secondary-bg: #4a4a4a;
+    --btn-secondary-text: #e8e8e8;
+    --btn-secondary-hover: #5a5a5a;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #ffffff;
+    --btn-danger-hover: #ff6b6b;
+
+    --input-bg: #1f1f1f;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-primary);
+
+    --code-bg: #1f1f1f;
+    --code-text: #e8e8e8;
+
+    /* Additional UI Variables */
+    --bg-hover: #2e2e2e;
+    --bg-input: #1f1f1f;
+    
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    --theme-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+/* ========================================
+   THEME: TERMINAL (Light)
+   Classic terminal aesthetic
+   Colors: Black, white, green accent
+   ======================================== */
+body.theme-terminal {
+    /* Structural Colors */
+    --color-primary: #00c853;
+    --color-secondary: #00a845;
+    --color-accent: #00e676;
+
+    /* Semantic Colors */
+    --color-success: #00c853;
+    --color-failure: #ff1744;
+    --color-warning: #f39c12;
+    --color-info: #00b0ff;
+
+    /* Log Level Colors */
+    --level-debug: #757575;
+    --level-info: #00b0ff;
+    --level-warn: #f39c12;
+    --level-error: #ff1744;
+    --level-fatal: #c62828;
+
+    /* Derived backgrounds */
+    --bg-primary: #fafafa;
+    --bg-secondary: #f5f5f5;
+    --bg-tertiary: #eeeeee;
+    --bg-card: #ffffff;
+
+    --text-primary: #212121;
+    --text-secondary: #424242;
+    --text-muted: #757575;
+
+    --border-primary: #e0e0e0;
+    --border-secondary: #bdbdbd;
+
+    /* UI Element Colors */
+    --header-bg: #ffffff;
+    --header-text: var(--color-primary);
+    --header-shadow: rgba(0, 0, 0, 0.1);
+
+    --log-bg: #ffffff;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: rgba(0, 0, 0, 0.08);
+
+    --filter-bg: #ffffff;
+    --filter-shadow: rgba(0, 0, 0, 0.1);
+
+    --btn-primary-bg: var(--color-primary);
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover: var(--color-secondary);
+
+    --btn-secondary-bg: #e0e0e0;
+    --btn-secondary-text: #212121;
+    --btn-secondary-hover: #d0d0d0;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #ffffff;
+    --btn-danger-hover: #d50000;
+
+    --input-bg: #ffffff;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-primary);
+
+    --code-bg: #f5f5f5;
+    --code-text: #212121;
+
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: 'IBM Plex Mono', 'SF Mono', Monaco, monospace;
+    --theme-font-mono: 'IBM Plex Mono', 'SF Mono', Monaco, monospace;
+}
+
+/* TERMINAL DARK */
+body.theme-terminal-dark {
+    /* Structural Colors */
+    --color-primary: #00ff41;
+    --color-secondary: #00e676;
+    --color-accent: #69f0ae;
+
+    /* Semantic Colors */
+    --color-success: #00ff41;
+    --color-failure: #ff5252;
+    --color-warning: #f39c12;
+    --color-info: #40c4ff;
+
+    /* Log Level Colors */
+    --level-debug: #9e9e9e;
+    --level-info: #40c4ff;
+    --level-warn: #f39c12;
+    --level-error: #ff5252;
+    --level-fatal: #ff1744;
+
+    /* Derived backgrounds */
+    --bg-primary: #0d0d0d;
+    --bg-secondary: #141414;
+    --bg-tertiary: #1a1a1a;
+    --bg-card: #161616;
+
+    --text-primary: #00ff41;
+    --text-secondary: #00e676;
+    --text-muted: #69f0ae;
+
+    --border-primary: #1a3d1a;
+    --border-secondary: #2d5a2d;
+
+    /* UI Element Colors */
+    --header-bg: #0a0a0a;
+    --header-text: var(--color-primary);
+    --header-shadow: rgba(0, 255, 65, 0.1);
+
+    --log-bg: #111111;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: rgba(0, 255, 65, 0.15);
+
+    --filter-bg: #111111;
+    --filter-shadow: rgba(0, 255, 65, 0.1);
+
+    --btn-primary-bg: var(--color-primary);
+    --btn-primary-text: #000000;
+    --btn-primary-hover: var(--color-secondary);
+
+    --btn-secondary-bg: #1a3d1a;
+    --btn-secondary-text: var(--color-primary);
+    --btn-secondary-hover: #2d5a2d;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #000000;
+    --btn-danger-hover: #ff6b6b;
+
+    --input-bg: #0a0a0a;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-primary);
+
+    --code-bg: #0a0a0a;
+    --code-text: var(--color-primary);
+
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #000000;
+    --text-on-warning: #ffffff;
+    --text-on-success: #000000;
+    --text-on-danger: #000000;
+    --text-on-info: #000000;
+
+    --theme-font: 'IBM Plex Mono', 'SF Mono', Monaco, monospace;
+    --theme-font-mono: 'IBM Plex Mono', 'SF Mono', Monaco, monospace;
+}
+
+/* Terminal theme specific overrides */
+/* Terminal theme - colors only, no style overrides */
+
+/* ========================================
+   THEME: PAPER (Light)
+   Document/paper-like aesthetic
+   Colors: Warm off-white with muted accents
+   ======================================== */
+body.theme-paper {
+    /* Structural Colors */
+    --color-primary: #5a5a50;
+    --color-secondary: #3d473c;
+    --color-accent: #6a6a5a;
+
+    /* Semantic Colors */
+    --color-success: #4a5a48;
+    --color-failure: #8a3030;
+    --color-warning: #f39c12;
+    --color-info: #4a5560;
+
+    /* Log Level Colors */
+    --level-debug: #6a716a;
+    --level-info: #4a5560;
+    --level-warn: #f39c12;
+    --level-error: #8a3030;
+    --level-fatal: #6a1818;
+
+    /* Derived backgrounds */
+    --bg-primary: #f4f1e8;
+    --bg-secondary: #e8e4d9;
+    --bg-tertiary: #ddd9ce;
+    --bg-card: #fafaf5;
+
+    --text-primary: #2a2a2a;
+    --text-secondary: #3d473c;
+    --text-muted: #6a716a;
+
+    --border-primary: #c7c3b8;
+    --border-secondary: #b5b1a6;
+
+    /* UI Element Colors */
+    --header-bg: #fafaf5;
+    --header-text: var(--color-primary);
+    --header-shadow: rgba(0, 0, 0, 0.08);
+
+    --log-bg: #fafaf5;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: rgba(0, 0, 0, 0.06);
+
+    --filter-bg: #fafaf5;
+    --filter-shadow: rgba(0, 0, 0, 0.08);
+
+    --btn-primary-bg: var(--color-accent);
+    --btn-primary-text: #e8e4d9;
+    --btn-primary-hover: var(--color-secondary);
+
+    --btn-secondary-bg: #c7c3b8;
+    --btn-secondary-text: #2a2a2a;
+    --btn-secondary-hover: #b5b1a6;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #e8e4d9;
+    --btn-danger-hover: #7a2828;
+
+    --input-bg: #ffffff;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-accent);
+
+    --code-bg: rgba(0, 0, 0, 0.04);
+    --code-text: #2a2a2a;
+
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: 'Roboto Mono', 'SF Mono', Monaco, monospace;
+    --theme-font-mono: 'Roboto Mono', 'SF Mono', Monaco, monospace;
+}
+
+/* PAPER DARK */
+body.theme-paper-dark {
+    /* Structural Colors */
+    --color-primary: #6a6a5a;
+    --color-secondary: #3d473c;
+    --color-accent: #7a7a6a;
+
+    /* Semantic Colors */
+    --color-success: #3a4a38;
+    --color-failure: #6a2020;
+    --color-warning: #f39c12;
+    --color-info: #3a4550;
+
+    /* Log Level Colors */
+    --level-debug: #9a9590;
+    --level-info: #3a4550;
+    --level-warn: #f39c12;
+    --level-error: #8a3030;
+    --level-fatal: #6a1818;
+
+    /* Derived backgrounds */
+    --bg-primary: #1a1a18;
+    --bg-secondary: #2a2e2c;
+    --bg-tertiary: #353937;
+    --bg-card: #252523;
+
+    --text-primary: #e8e4d9;
+    --text-secondary: #c7c3b8;
+    --text-muted: #9a9590;
+
+    --border-primary: #3d3d38;
+    --border-secondary: #4a4a45;
+
+    /* UI Element Colors */
+    --header-bg: #1f1f1d;
+    --header-text: var(--color-primary);
+    --header-shadow: rgba(0, 0, 0, 0.3);
+
+    --log-bg: #252523;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: rgba(0, 0, 0, 0.4);
+
+    --filter-bg: #252523;
+    --filter-shadow: rgba(0, 0, 0, 0.3);
+
+    --btn-primary-bg: var(--color-accent);
+    --btn-primary-text: #e8e4d9;
+    --btn-primary-hover: var(--color-secondary);
+
+    --btn-secondary-bg: #3d3d38;
+    --btn-secondary-text: #e8e4d9;
+    --btn-secondary-hover: #4a4a45;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #e8e4d9;
+    --btn-danger-hover: #8a3030;
+
+    --input-bg: #1a1a18;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-accent);
+
+    --code-bg: rgba(255, 255, 255, 0.05);
+    --code-text: #e8e4d9;
+
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: 'Roboto Mono', 'SF Mono', Monaco, monospace;
+    --theme-font-mono: 'Roboto Mono', 'SF Mono', Monaco, monospace;
+}
+
+/* Paper theme specific overrides */
+/* Paper theme - colors only, no style overrides */
+
+/* ========================================
+   GLOBAL THEME APPLICATION
+   ======================================== */
+
+body {
+    background-color: var(--bg-secondary);
+    color: var(--text-primary);
+    font-family: var(--theme-font);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Apply theme to common elements */
+header {
+    background: var(--header-bg) !important;
+    box-shadow: 0 2px 4px var(--header-shadow) !important;
+}
+
+header h1 {
+    color: var(--header-text) !important;
+}
+
+nav a {
+    color: var(--text-secondary) !important;
+}
+
+nav a:hover,
+nav a.router-link-active {
+    color: var(--color-primary) !important;
+    background: var(--bg-tertiary) !important;
+}
+
+.dashboard {
+    background: var(--bg-secondary) !important;
+}
+
+.filters,
+.logs-container,
+.card {
+    background: var(--filter-bg) !important;
+    box-shadow: 0 2px 8px var(--filter-shadow) !important;
+}
+
+.log-entry {
+    background: var(--log-bg) !important;
+    border-bottom: 1px solid var(--log-border) !important;
+}
+
+.log-entry:hover {
+    box-shadow: 0 2px 8px var(--log-hover-shadow) !important;
+}
+
+/* Log level specific colors - removed border-left, using dots instead */
+
+/* Buttons */
+.btn-primary,
+button.btn-primary {
+    background: var(--btn-primary-bg) !important;
+    color: var(--btn-primary-text) !important;
+}
+
+.btn-primary:hover,
+button.btn-primary:hover {
+    background: var(--btn-primary-hover) !important;
+}
+
+.btn-secondary,
+button.btn-secondary {
+    background: var(--btn-secondary-bg) !important;
+    color: var(--btn-secondary-text) !important;
+}
+
+.btn-secondary:hover,
+button.btn-secondary:hover {
+    background: var(--btn-secondary-hover) !important;
+}
+
+.logout-btn {
+    background: var(--btn-danger-bg) !important;
+    color: var(--btn-danger-text) !important;
+}
+
+.logout-btn:hover {
+    background: var(--btn-danger-hover) !important;
+}
+
+.btn-export {
+    background: var(--color-success) !important;
+}
+
+.btn-refresh {
+    background: var(--color-info) !important;
+}
+
+/* Inputs */
+input,
+select,
+textarea {
+    background: var(--input-bg) !important;
+    color: var(--text-primary) !important;
+    border: 1px solid var(--input-border) !important;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    border-color: var(--input-focus) !important;
+    outline: none;
+}
+
+/* Code blocks */
+pre,
+code,
+.log-data {
+    background: var(--code-bg) !important;
+    color: var(--code-text) !important;
+    font-family: var(--theme-font-mono) !important;
+}
+
+/* Text colors */
+h1, h2, h3, h4, h5, h6 {
+    color: var(--text-primary) !important;
+}
+
+.text-muted,
+.log-time {
+    color: var(--text-muted) !important;
+}
+
+.text-secondary {
+    color: var(--text-secondary) !important;
+}
+
+/* Borders */
+.border,
+.border-top,
+.border-bottom {
+    border-color: var(--border-primary) !important;
+}
+
+/* ========================================
+   THEME: SAP (Light)
+   SAP Fiori design system
+   Colors: SAP Blue (#0070F2)
+   ======================================== */
+body.theme-sap {
+    /* Structural Colors */
+    --color-primary: #0070F2;
+    --color-secondary: #0854A0;
+    --color-accent: #3B91FF;
+
+    /* Semantic Colors */
+    --color-success: #30BA78;
+    --color-failure: #FF5252;
+    --color-danger: #FF5252;
+    --color-danger-hover: #d73f3f;
+    --color-warning: #f39c12;
+    --color-info: #3B91FF;
+
+    /* Log Level Colors */
+    --level-debug: #6A6D70;
+    --level-info: #3B91FF;
+    --level-warn: #f39c12;
+    --level-error: #FF5252;
+    --level-fatal: #c62828;
+
+    /* Derived backgrounds */
+    --bg-primary: #F5F6F7;
+    --bg-secondary: #FFFFFF;
+    --bg-tertiary: #FAFBFC;
+    --bg-card: #FFFFFF;
+    --bg-sidebar: #32363A;
+    --bg-sidebar-hover: #3d4145;
+    --bg-sidebar-active: #0070F2;
+
+    --text-primary: #32363A;
+    --text-secondary: #6A6D70;
+    --text-muted: #9FA3A7;
+    --text-sidebar: #FFFFFF;
+    --text-sidebar-muted: #9FA3A7;
+
+    --border-primary: #D5DDE5;
+    --border-secondary: #EAECEE;
+    --border-color: #D5DDE5;
+
+    /* UI Element Colors */
+    --header-bg: #FFFFFF;
+    --header-text: var(--color-primary);
+    --header-shadow: rgba(0, 0, 0, 0.08);
+
+    --log-bg: #FFFFFF;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: rgba(0, 0, 0, 0.12);
+
+    --filter-bg: #FFFFFF;
+    --filter-shadow: rgba(0, 0, 0, 0.08);
+
+    --btn-primary-bg: var(--color-primary);
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: var(--color-secondary);
+
+    --btn-secondary-bg: #FFFFFF;
+    --btn-secondary-text: #0070F2;
+    --btn-secondary-hover: #FAFBFC;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #FFFFFF;
+    --btn-danger-hover: #d73f3f;
+
+    --input-bg: #FFFFFF;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-primary);
+
+    --code-bg: rgba(0, 112, 242, 0.04);
+    --code-text: #32363A;
+
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: '72', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
+    --theme-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+/* SAP DARK */
+body.theme-sap-dark {
+    /* Structural Colors */
+    --color-primary: #0070F2;
+    --color-secondary: #0854A0;
+    --color-accent: #3B91FF;
+
+    /* Semantic Colors */
+    --color-success: #30BA78;
+    --color-failure: #FF5252;
+    --color-danger: #FF5252;
+    --color-danger-hover: #ff6b6b;
+    --color-warning: #f39c12;
+    --color-info: #3B91FF;
+
+    /* Log Level Colors */
+    --level-debug: #6B9DC9;
+    --level-info: #3B91FF;
+    --level-warn: #f39c12;
+    --level-error: #FF5252;
+    --level-fatal: #c62828;
+
+    /* Derived backgrounds */
+    --bg-primary: #0A1929;
+    --bg-secondary: #132A3F;
+    --bg-tertiary: #1D3A52;
+    --bg-card: #152E44;
+    --bg-sidebar: #0A1929;
+    --bg-sidebar-hover: #132A3F;
+    --bg-sidebar-active: #1D3A52;
+
+    --text-primary: #FFFFFF;
+    --text-secondary: #3B91FF;
+    --text-muted: #6B9DC9;
+    --text-sidebar: #FFFFFF;
+    --text-sidebar-muted: #6B9DC9;
+
+    --border-primary: #2A4A63;
+    --border-secondary: #1D3A52;
+    --border-color: #2A4A63;
+
+    /* UI Element Colors */
+    --header-bg: #0A1929;
+    --header-text: var(--color-primary);
+    --header-shadow: rgba(0, 0, 0, 0.3);
+
+    --log-bg: #132A3F;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: rgba(59, 145, 255, 0.15);
+
+    --filter-bg: #132A3F;
+    --filter-shadow: rgba(0, 0, 0, 0.3);
+
+    --btn-primary-bg: var(--color-primary);
+    --btn-primary-text: #FFFFFF;
+    --btn-primary-hover: var(--color-secondary);
+
+    --btn-secondary-bg: #1D3A52;
+    --btn-secondary-text: #3B91FF;
+    --btn-secondary-hover: #2A4A63;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #FFFFFF;
+    --btn-danger-hover: #ff6b6b;
+
+    --input-bg: #0A1929;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-primary);
+
+    --code-bg: rgba(0, 112, 242, 0.08);
+    --code-text: #FFFFFF;
+
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: '72', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', Arial, sans-serif;
+    --theme-font-mono: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+}
+
+/* SAP theme specific overrides */
+/* SAP theme - colors only, no style overrides */
+
+/* ========================================
+   THEME: AGENT-47 (Dark)
+   Hitman-inspired terminal aesthetic
+   Colors: Pure black, white, red accent
+   ======================================== */
+body.theme-agent-47 {
+    /* Structural Colors */
+    --color-primary: #505050;
+    --color-secondary: #424242;
+    --color-accent: #d32f2f;
+
+    /* Semantic Colors */
+    --color-success: #4caf50;
+    --color-failure: #f44336;
+    --color-danger: #f44336;
+    --color-danger-hover: #d32f2f;
+    --color-warning: #f39c12;
+    --color-info: #2196f3;
+
+    /* Log Level Colors */
+    --level-debug: #9e9e9e;
+    --level-info: #2196f3;
+    --level-warn: #f39c12;
+    --level-error: #f44336;
+    --level-fatal: #d32f2f;
+
+    /* Derived backgrounds */
+    --bg-primary: #000000;
+    --bg-secondary: #0a0a0a;
+    --bg-tertiary: #1a1a1a;
+    --bg-card: #212121;
+    --bg-sidebar: #000000;
+    --bg-sidebar-hover: #0a0a0a;
+    --bg-sidebar-active: #1a1a1a;
+
+    --text-primary: #ffffff;
+    --text-secondary: #f5f5f5;
+    --text-muted: #9e9e9e;
+    --text-sidebar: #ffffff;
+    --text-sidebar-muted: #9e9e9e;
+
+    --border-primary: #616161;
+    --border-secondary: #757575;
+    --border-color: #616161;
+
+    /* UI Element Colors */
+    --header-bg: #000000;
+    --header-text: var(--color-accent);
+    --header-shadow: rgba(211, 47, 47, 0.1);
+
+    --log-bg: #0a0a0a;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: none;
+
+    --filter-bg: #0a0a0a;
+    --filter-shadow: none;
+
+    --btn-primary-bg: var(--color-accent);
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover: #b71c1c;
+
+    --btn-secondary-bg: #616161;
+    --btn-secondary-text: #e0e0e0;
+    --btn-secondary-hover: #757575;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #ffffff;
+    --btn-danger-hover: #d32f2f;
+
+    --input-bg: #000000;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-accent);
+
+    --code-bg: #000000;
+    --code-text: #ffffff;
+
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: 'IBM Plex Mono', monospace;
+    --theme-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* ========================================
+   THEME: AGENT-47 LIGHT
+   Hitman-inspired minimal dossier aesthetic
+   Colors: Clean white, dark text, red accent
+   ======================================== */
+body.theme-agent-47-light {
+    /* Structural Colors */
+    --color-primary: #424242;
+    --color-secondary: #616161;
+    --color-accent: #d32f2f;
+
+    /* Semantic Colors */
+    --color-success: #2e7d32;
+    --color-failure: #c62828;
+    --color-danger: #c62828;
+    --color-danger-hover: #b71c1c;
+    --color-warning: #f39c12;
+    --color-info: #1976d2;
+
+    /* Log Level Colors */
+    --level-debug: #757575;
+    --level-info: #1976d2;
+    --level-warn: #f39c12;
+    --level-error: #c62828;
+    --level-fatal: #b71c1c;
+
+    /* Derived backgrounds */
+    --bg-primary: #fafafa;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f5f5f5;
+    --bg-card: #ffffff;
+    --bg-sidebar: #212121;
+    --bg-sidebar-hover: #424242;
+    --bg-sidebar-active: #616161;
+
+    --text-primary: #212121;
+    --text-secondary: #424242;
+    --text-muted: #757575;
+    --text-sidebar: #ffffff;
+    --text-sidebar-muted: #bdbdbd;
+
+    --border-primary: #e0e0e0;
+    --border-secondary: #bdbdbd;
+    --border-color: #e0e0e0;
+
+    /* UI Element Colors */
+    --header-bg: #ffffff;
+    --header-text: var(--color-accent);
+    --header-shadow: rgba(0, 0, 0, 0.08);
+
+    --log-bg: #ffffff;
+    --log-border: var(--border-primary);
+    --log-hover-shadow: none;
+
+    --filter-bg: #ffffff;
+    --filter-shadow: rgba(0, 0, 0, 0.08);
+
+    --btn-primary-bg: var(--color-accent);
+    --btn-primary-text: #ffffff;
+    --btn-primary-hover: #b71c1c;
+
+    --btn-secondary-bg: #e0e0e0;
+    --btn-secondary-text: #212121;
+    --btn-secondary-hover: #bdbdbd;
+
+    --btn-danger-bg: var(--color-failure);
+    --btn-danger-text: #ffffff;
+    --btn-danger-hover: #b71c1c;
+
+    --input-bg: #ffffff;
+    --input-border: var(--border-primary);
+    --input-focus: var(--color-accent);
+
+    --code-bg: #fafafa;
+    --code-text: #212121;
+
+    /* Text colors for colored backgrounds */
+    --text-on-primary: #ffffff;
+    --text-on-warning: #ffffff;
+    --text-on-success: #ffffff;
+    --text-on-danger: #ffffff;
+    --text-on-info: #ffffff;
+
+    --theme-font: 'IBM Plex Mono', monospace;
+    --theme-font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* Agent-47 theme specific overrides (both variants) */
+/* Agent-47 theme - colors only, no style overrides */

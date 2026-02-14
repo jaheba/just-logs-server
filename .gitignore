@@ -1,0 +1,102 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+venv/
+env/
+ENV/
+.venv/
+
+# uv
+uv.lock
+.uv/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Frontend build
+frontend/dist/
+frontend/.vite/
+
+# Logs
+logs/
+*.log
+
+# Development server
+.dev-server.pid
+
+# Secret keys
+backend/.secret_key
+
+# Client and benchmark (separate packages)
+client/
+benchmark/
+
+# Examples and demos
+examples/
+example_logger.py
+quickstart.py
+test_just_logs.py
+jlo_client.py
+jlo_logging_handler.py
+
+# Extra documentation
+ARCHITECTURE.md
+DEV_GUIDE.md
+DEPLOYMENT.md
+SECURITY.md
+THEMES.md
+PYTHON_CLIENT.md
+QUICK_START.md
+QUICKSTART.md
+QUICK_START_DEV.md
+JUSTFILE.md
+EXAMPLES.md
+UV_GUIDE.md
+SESSION_FIX.md
+STARTUP_FIX.md
+UI_REDESIGN.md
+AGENT47_*.md
+
+# Demo/test HTML files
+logo-demo.html
+mockup-*.html
+test-*.html

@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  jlo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: jlo:latest
+    container_name: jlo-server
+    ports:
+      - "8000:8000"
+    volumes:
+      # Persist database across container restarts
+      - jlo-data:/app/backend/data
+    environment:
+      # Server configuration
+      - JLO_HOST=0.0.0.0
+      - JLO_PORT=8000
+      - JLO_WORKERS=4
+      
+      # Database configuration
+      - JLO_DB_PATH=/app/backend/data/jlo.db
+      
+      # Optional: Set custom admin password on first run
+      # - JLO_ADMIN_PASSWORD=your-secure-password
+      
+      # Optional: JWT secret (recommended to set in production)
+      # - JLO_SECRET_KEY=your-secret-key-here
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    networks:
+      - jlo-network
+
+volumes:
+  jlo-data:
+    driver: local
+
+networks:
+  jlo-network:
+    driver: bridge

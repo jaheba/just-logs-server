@@ -335,11 +335,34 @@ if __name__ == '__main__':
 
 ## Configuration
 
+### Environment Variables
+
+Configure jlo using environment variables. See `.env.example` for all available options.
+
+**Required (Production):**
+- `JLO_SECRET_KEY` - JWT secret key for signing tokens (generate with `openssl rand -hex 32`)
+- `JLO_ADMIN_PASSWORD` - Initial admin password (first-time setup only)
+
+**Optional:**
+- `JLO_ENV` - Environment mode (`development` or `production`, default: `production`)
+- `JLO_CORS_ORIGINS` - Comma-separated list of allowed origins (e.g., `https://logs.example.com,https://logs.backup.com`)
+- `JLO_HOST` - Server host (default: `0.0.0.0`)
+- `JLO_PORT` - Server port (default: `8000`)
+- `JLO_WORKERS` - Number of worker processes (default: `4`)
+- `JLO_DB_PATH` - Path to SQLite database file (default: `jlo.db`)
+
+**Example production .env:**
+```bash
+JLO_SECRET_KEY=abc123def456...
+JLO_ADMIN_PASSWORD=MySecurePassword123!
+JLO_ENV=production
+JLO_CORS_ORIGINS=https://logs.mycompany.com
+```
+
 ### Backend Configuration
 
-Edit `backend/auth.py` to customize:
-- `SECRET_KEY` - JWT secret (use environment variable in production)
-- `ACCESS_TOKEN_EXPIRE_MINUTES` - Session duration
+JWT and authentication settings in `backend/auth.py`:
+- `ACCESS_TOKEN_EXPIRE_MINUTES` - Session duration (default: 24 hours)
 
 ### Frontend Configuration
 

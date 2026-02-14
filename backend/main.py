@@ -130,16 +130,27 @@ def is_request_secure(request: Request) -> bool:
     return request.url.scheme == "https"
 
 
-# CORS middleware for development
+# CORS middleware configuration
 # Note: allow_origins must be specific when using allow_credentials=True
+# Configure via JLO_CORS_ORIGINS environment variable (comma-separated list)
+# Example: JLO_CORS_ORIGINS="https://logs.example.com,https://logs.example2.com"
+cors_origins = [
+    "http://localhost:5173",  # Frontend dev server
+    "http://localhost:8000",  # Backend/production
+    "http://127.0.0.1:5173",
+    "http://127.0.0.1:8000",
+]
+
+# Add custom origins from environment variable
+custom_origins = os.getenv("JLO_CORS_ORIGINS", "")
+if custom_origins:
+    cors_origins.extend(
+        [origin.strip() for origin in custom_origins.split(",") if origin.strip()]
+    )
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",  # Frontend dev server
-        "http://localhost:8000",  # Backend/production
-        "http://127.0.0.1:5173",
-        "http://127.0.0.1:8000",
-    ],
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -506,13 +517,16 @@ async def login(request: Request, credentials: LoginRequest, response: Response)
     access_token = create_access_token(data={"sub": user["username"]})
 
     # Set HTTP-only cookie with secure flag (auto-detects HTTPS)
+    # Note: Using "lax" instead of "strict" for better compatibility with reverse proxies
+    # "lax" still provides strong CSRF protection while allowing legitimate navigation
+    # If you need "strict", ensure your reverse proxy forwards X-Forwarded-Proto and X-Forwarded-Host
     response.set_cookie(
         key="session_token",
         value=access_token,
         httponly=True,
         secure=is_request_secure(request),  # True in production HTTPS, False in dev
         max_age=60 * 60 * 24,  # 24 hours
-        samesite="strict",  # Upgraded from "lax" for better security
+        samesite="lax",  # Recommended for reverse proxy setups; change to "strict" if needed
         path="/",
     )
 

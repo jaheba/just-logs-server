@@ -33,6 +33,11 @@ services:
       # Optional: Environment mode (default: production)
       # Set to "development" to allow HTTP cookies
       - JLO_ENV=${JLO_ENV:-production}
+      
+      # Optional: Additional CORS origins (comma-separated)
+      # Required for production deployments
+      # Example: JLO_CORS_ORIGINS=https://logs.example.com,https://logs.backup.com
+      - JLO_CORS_ORIGINS=${JLO_CORS_ORIGINS:-}
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8000/api/health"]

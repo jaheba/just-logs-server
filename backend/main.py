@@ -267,7 +267,10 @@ async def ingest_logs(
     for log_dict in logs_data:
         # Parse log entry
         log = LogCreate(**log_dict)
-        timestamp = log.timestamp or datetime.utcnow()
+        server_timestamp = datetime.utcnow()  # Capture server receipt time
+        timestamp = (
+            log.timestamp or server_timestamp
+        )  # Client timestamp or fallback to server time
 
         # Prepare log for queue
         log_data = {
@@ -277,6 +280,7 @@ async def ingest_logs(
             "structured_data": log.structured_data,
             "tags": api_key_tags,  # Attach API key tags
             "timestamp": timestamp,
+            "server_timestamp": server_timestamp,
         }
 
         # Enqueue for async processing (non-blocking)
@@ -293,6 +297,7 @@ async def ingest_logs(
                 "structured_data": log.structured_data,
                 "tags": api_key_tags,
                 "timestamp": timestamp.isoformat(),
+                "server_timestamp": server_timestamp.isoformat(),
                 "created_at": datetime.utcnow().isoformat(),
             }
 
@@ -340,7 +345,10 @@ async def ingest_logs_batch(
     dropped = 0
 
     for log in batch.logs:
-        timestamp = log.timestamp or datetime.utcnow()
+        server_timestamp = datetime.utcnow()  # Capture server receipt time
+        timestamp = (
+            log.timestamp or server_timestamp
+        )  # Client timestamp or fallback to server time
 
         # Prepare log for queue
         log_data = {
@@ -350,6 +358,7 @@ async def ingest_logs_batch(
             "structured_data": log.structured_data,
             "tags": api_key_tags,
             "timestamp": timestamp,
+            "server_timestamp": server_timestamp,
         }
 
         # Enqueue for async processing (non-blocking)
@@ -366,6 +375,7 @@ async def ingest_logs_batch(
                 "structured_data": log.structured_data,
                 "tags": api_key_tags,
                 "timestamp": timestamp.isoformat(),
+                "server_timestamp": server_timestamp.isoformat(),
                 "created_at": datetime.utcnow().isoformat(),
             }
 

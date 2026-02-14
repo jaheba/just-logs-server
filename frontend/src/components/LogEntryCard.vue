@@ -109,8 +109,12 @@
             <span class="property-value">{{ log.app_name }}</span>
           </div>
           <div class="property-row">
-            <span class="property-key">Timestamp:</span>
+            <span class="property-key">Client Timestamp:</span>
             <span class="property-value">{{ new Date(log.timestamp).toISOString() }}</span>
+          </div>
+          <div v-if="log.server_timestamp" class="property-row">
+            <span class="property-key">Server Timestamp:</span>
+            <span class="property-value">{{ new Date(log.server_timestamp).toISOString() }}</span>
           </div>
         </div>
       </div>

@@ -228,6 +228,7 @@ def create_log(
     structured_data: Optional[Dict[str, Any]],
     timestamp: datetime,
     tags: Optional[Dict[str, str]] = None,
+    server_timestamp: Optional[datetime] = None,
 ) -> int:
     """Create a new log entry"""
     with get_db() as conn:
@@ -236,10 +237,18 @@ def create_log(
         tags_json = json.dumps(tags) if tags else None
         cursor.execute(
             """
-            INSERT INTO logs (app_id, level, message, structured_data, tags, timestamp)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO logs (app_id, level, message, structured_data, tags, timestamp, server_timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """,
-            (app_id, level, message, structured_json, tags_json, timestamp.isoformat()),
+            (
+                app_id,
+                level,
+                message,
+                structured_json,
+                tags_json,
+                timestamp.isoformat(),
+                server_timestamp.isoformat() if server_timestamp else None,
+            ),
         )
         return cursor.lastrowid
 
@@ -257,6 +266,7 @@ def create_logs_bulk(logs: List[Dict[str, Any]]) -> List[int]:
             - structured_data: Optional[Dict[str, Any]]
             - tags: Optional[Dict[str, str]]
             - timestamp: datetime
+            - server_timestamp: Optional[datetime]
 
     Returns:
         List of inserted log IDs
@@ -276,6 +286,7 @@ def create_logs_bulk(logs: List[Dict[str, Any]]) -> List[int]:
                 else None
             )
             tags_json = json.dumps(log.get("tags")) if log.get("tags") else None
+            server_timestamp = log.get("server_timestamp")
             values.append(
                 (
                     log["app_id"],
@@ -286,14 +297,17 @@ def create_logs_bulk(logs: List[Dict[str, Any]]) -> List[int]:
                     log["timestamp"].isoformat()
                     if isinstance(log["timestamp"], datetime)
                     else log["timestamp"],
+                    server_timestamp.isoformat()
+                    if isinstance(server_timestamp, datetime)
+                    else server_timestamp,
                 )
             )
 
         # Single transaction, multiple inserts using executemany
         cursor.executemany(
             """
-            INSERT INTO logs (app_id, level, message, structured_data, tags, timestamp)
-            VALUES (?, ?, ?, ?, ?, ?)
+            INSERT INTO logs (app_id, level, message, structured_data, tags, timestamp, server_timestamp)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             values,
         )

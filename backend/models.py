@@ -37,8 +37,11 @@ class LogResponse(BaseModel):
     message: str
     structured_data: Optional[Dict[str, Any]]
     tags: Optional[Dict[str, str]] = None
-    timestamp: datetime
-    created_at: datetime
+    timestamp: datetime  # Client timestamp (when log occurred on client)
+    server_timestamp: Optional[datetime] = (
+        None  # Server timestamp (when server received log)
+    )
+    created_at: datetime  # Database insertion timestamp
 
 
 class AppCreate(BaseModel):

@@ -99,8 +99,12 @@
                       <span class="value">{{ log.id }}</span>
                     </div>
                     <div class="metadata-item">
-                      <span class="label">Timestamp:</span>
+                      <span class="label">Client Timestamp:</span>
                       <span class="value">{{ new Date(log.timestamp).toISOString() }}</span>
+                    </div>
+                    <div v-if="log.server_timestamp" class="metadata-item">
+                      <span class="label">Server Timestamp:</span>
+                      <span class="value">{{ new Date(log.server_timestamp).toISOString() }}</span>
                     </div>
                     <div v-if="log.parser_rule_id" class="metadata-item">
                       <span class="label">Parser Rule ID:</span>

@@ -18,10 +18,9 @@
             @click="handleLiveToggle"
             class="live-btn"
             :class="{ active: localFilters.realtime, 'new-log': showNewLogAnimation }"
-            :title="localFilters.realtime ? 'Live updates ON - Click to pause' : 'Click to refresh and enable live updates'"
+            :title="localFilters.realtime ? 'Pause live updates' : 'Start live updates'"
           >
-            <font-awesome-icon :icon="localFilters.realtime ? 'bolt' : 'play'" class="live-icon" />
-            <span>{{ localFilters.realtime ? 'LIVE' : 'Run' }}</span>
+            <font-awesome-icon :icon="localFilters.realtime ? 'pause' : 'play'" class="live-icon" />
           </button>
           <button
             @click="toggleSidebar"
@@ -158,24 +157,16 @@ export default {
       }
     })
     
-    // Initialize time range with actual dates
-    const initTimeRange = () => {
-      const now = new Date()
-      const from = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString()
-      const to = now.toISOString()
-      return {
-        from,
-        to,
-        label: props.filters.timeRange?.label || 'All'
-      }
-    }
-    
     const localFilters = ref({
       app_id: props.filters.app_id,
       level: props.filters.level,
       search: props.filters.search,
       tags: props.filters.tags || {},
-      timeRange: props.filters.timeRange?.from ? { ...props.filters.timeRange } : initTimeRange(),
+      timeRange: props.filters.timeRange ? { ...props.filters.timeRange } : {
+        from: null,
+        to: null,
+        label: 'All'
+      },
       realtime: props.filters.realtime,
       autoRefresh: props.filters.autoRefresh
     })
@@ -406,16 +397,14 @@ export default {
   border: none;
   border-radius: 4px;
   color: white;
-  font-size: 0.8125rem;
+  font-size: 1rem;
   cursor: pointer;
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
   transition: all 0.2s;
   font-weight: 600;
-  white-space: nowrap;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  min-width: 48px;
 }
 
 .live-btn:hover {
@@ -431,11 +420,7 @@ export default {
 }
 
 .live-icon {
-  font-size: 0.875rem;
-}
-
-.live-btn.active .live-icon {
-  animation: bolt-flash 1.5s ease-in-out infinite;
+  font-size: 1rem;
 }
 
 /* New log received animation */
@@ -452,14 +437,7 @@ export default {
   }
 }
 
-@keyframes bolt-flash {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
+
 
 @keyframes border-sweep {
   0% {

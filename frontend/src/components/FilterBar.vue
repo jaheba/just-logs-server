@@ -14,17 +14,14 @@
           />
         </div>
         <div class="query-actions">
-          <button @click="$emit('apply')" class="play-btn" title="Run query">
-            <font-awesome-icon icon="play" />
-          </button>
           <button
-            @click="toggleWatch"
+            @click="handleLiveToggle"
             class="live-btn"
             :class="{ active: localFilters.realtime, 'new-log': showNewLogAnimation }"
-            :title="localFilters.realtime ? 'Live updates ON' : 'Enable live updates'"
+            :title="localFilters.realtime ? 'Live updates ON - Click to pause' : 'Click to refresh and enable live updates'"
           >
-            <font-awesome-icon icon="bolt" class="live-icon" />
-            <span>{{ localFilters.realtime ? 'LIVE' : 'Live' }}</span>
+            <font-awesome-icon :icon="localFilters.realtime ? 'bolt' : 'play'" class="live-icon" />
+            <span>{{ localFilters.realtime ? 'LIVE' : 'Run' }}</span>
           </button>
           <button
             @click="toggleSidebar"
@@ -236,9 +233,17 @@ export default {
       emit('apply')
     }
     
-    const toggleWatch = () => {
-      localFilters.value.realtime = !localFilters.value.realtime
-      emit('update:filters', { ...localFilters.value })
+    const handleLiveToggle = () => {
+      if (localFilters.value.realtime) {
+        // Currently live - pause it
+        localFilters.value.realtime = false
+        emit('update:filters', { ...localFilters.value })
+      } else {
+        // Currently paused - refresh and enable live
+        emit('apply')
+        localFilters.value.realtime = true
+        emit('update:filters', { ...localFilters.value })
+      }
     }
     
     const toggleSidebar = () => {
@@ -324,7 +329,7 @@ export default {
     return {
       localFilters,
       showNewLogAnimation,
-      toggleWatch,
+      handleLiveToggle,
       toggleSidebar,
       getAppName,
       removeTagFilter,
@@ -395,32 +400,12 @@ export default {
   flex-shrink: 0;
 }
 
-.play-btn {
+.live-btn {
   padding: 0.625rem 1rem;
   background: var(--color-primary, #667eea);
   border: none;
   border-radius: 4px;
   color: white;
-  font-size: 0.875rem;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: background 0.2s;
-  font-weight: 600;
-  min-width: 48px;
-}
-
-.play-btn:hover {
-  background: var(--color-secondary, #5a67d8);
-}
-
-.live-btn {
-  padding: 0.625rem 1rem;
-  background: var(--bg-tertiary, #2a2a2a);
-  border: none;
-  border-radius: 4px;
-  color: var(--text-primary, #e0e0e0);
   font-size: 0.8125rem;
   cursor: pointer;
   display: flex;
@@ -434,7 +419,7 @@ export default {
 }
 
 .live-btn:hover {
-  background: var(--bg-sidebar-hover, #333);
+  background: var(--color-secondary, #5a67d8);
   transform: translateY(-1px);
 }
 

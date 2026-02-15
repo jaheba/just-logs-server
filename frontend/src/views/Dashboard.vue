@@ -521,7 +521,10 @@ export default {
     }
     
     // Watch for realtime toggle
-    watch(() => filters.value.realtime, (newVal) => {
+    watch(() => filters.value.realtime, (newVal, oldVal) => {
+      // Only react to actual changes (not initial mount)
+      if (newVal === oldVal) return
+      
       if (newVal) {
         startRealtimeStream()
         setupAutoRefresh() // This will stop auto-refresh if realtime is on
@@ -598,12 +601,17 @@ export default {
       fetchLogs()
     }
     
-    onMounted(() => {
+    onMounted(async () => {
       initializeSidebar() // Initialize sidebar collapsed state
       applyHashFilters() // Apply filters from URL hash first
-      fetchLogs()
+      await fetchLogs() // Wait for initial logs to load
       fetchApps()
       fetchAvailableTags()
+      
+      // Start realtime stream if enabled
+      if (filters.value.realtime) {
+        startRealtimeStream()
+      }
       
       // Listen for hash changes (back/forward navigation)
       window.addEventListener('hashchange', handleHashChange)

@@ -145,9 +145,9 @@ export default {
       timeRange: {
         from: null,
         to: null,
-        label: 'Last 24 hours'
+        label: 'All'
       },
-      realtime: false,
+      realtime: true, // Live mode enabled by default
       autoRefresh: 'off'
     })
     
@@ -704,6 +704,8 @@ export default {
   overflow-y: auto;
   padding: 0.2rem 0.4rem;
   background: var(--bg-secondary, #1a1a1a);
+  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
+  overscroll-behavior: contain; /* Prevent pull-to-refresh interference */
 }
 
 .loading-overlay {

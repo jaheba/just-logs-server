@@ -169,7 +169,7 @@ export default {
       return {
         from,
         to,
-        label: props.filters.timeRange?.label || 'Last 24 hours'
+        label: props.filters.timeRange?.label || 'All'
       }
     }
     
@@ -209,7 +209,7 @@ export default {
       showCustomDateModal.value = false
       // Reset to previous label if user cancels
       if (localFilters.value.timeRange.label === 'Custom range...') {
-        localFilters.value.timeRange.label = 'Last 24 hours'
+        localFilters.value.timeRange.label = 'All'
       }
     }
     

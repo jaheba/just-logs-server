@@ -348,7 +348,7 @@ export default {
 .burger-btn {
   background: transparent;
   border: none;
-  color: var(--text-sidebar, #e0e0e0);
+  color: var(--text-secondary, #666);
   cursor: pointer;
   font-size: 1.25rem;
   padding: 0.5rem;
@@ -360,7 +360,8 @@ export default {
 }
 
 .burger-btn:hover {
-  background: var(--bg-sidebar-hover, #2a2a2a);
+  background: var(--bg-tertiary, #f5f5f5);
+  color: var(--text-primary, #333);
 }
 
 /* Logo */

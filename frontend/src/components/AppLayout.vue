@@ -8,9 +8,9 @@
           <font-awesome-icon :icon="showNavMenu ? 'times' : 'bars'" />
         </button>
         
-        <div class="logo">
+        <router-link to="/" class="logo">
           <span class="logo-j">j</span><span class="logo-l">l</span><span class="logo-o">o</span>
-        </div>
+        </router-link>
         
         <nav class="nav-links desktop-only">
           <router-link to="/" class="nav-link" :class="{ active: $route.path === '/' }">
@@ -368,6 +368,13 @@ export default {
   font-size: 1.25rem;
   font-weight: 800;
   letter-spacing: 0.5px;
+  text-decoration: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.logo:hover {
+  opacity: 0.8;
 }
 
 .logo-j {

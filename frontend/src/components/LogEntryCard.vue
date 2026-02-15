@@ -459,6 +459,6 @@ export default {
 
 .action-icon:hover {
   background: var(--color-primary, #667eea);
-  color: #ffffff;
+  color: var(--text-on-primary, #ffffff);
 }
 </style>

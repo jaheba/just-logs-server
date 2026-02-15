@@ -237,7 +237,7 @@ export default {
 
 .signal-item.active {
   background: var(--color-primary, #667eea);
-  color: #ffffff;
+  color: var(--text-on-primary, #ffffff);
 }
 
 .tag-group {

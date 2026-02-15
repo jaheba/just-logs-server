@@ -396,7 +396,7 @@ export default {
   background: var(--color-primary, #667eea);
   border: none;
   border-radius: 4px;
-  color: white;
+  color: var(--text-on-primary, #ffffff);
   font-size: 1rem;
   cursor: pointer;
   display: flex;
@@ -414,7 +414,7 @@ export default {
 
 .live-btn.active {
   background: var(--color-danger, #dc3545);
-  color: white;
+  color: var(--text-on-danger, #ffffff);
   animation: pulse 2s ease-in-out infinite;
   position: relative;
 }
@@ -574,12 +574,12 @@ export default {
 
 .tag-chip {
   background: var(--color-primary, #667eea);
-  color: white;
+  color: var(--text-on-primary, #ffffff);
 }
 
 .tag-chip .chip-label,
 .tag-chip .chip-value {
-  color: white;
+  color: var(--text-on-primary, #ffffff);
   font-family: var(--theme-font-mono, monospace);
 }
 
@@ -716,7 +716,7 @@ export default {
 
 .btn-primary {
   background: var(--color-primary, #667eea);
-  color: white;
+  color: var(--text-on-primary, #ffffff);
 }
 
 .btn-primary:hover {

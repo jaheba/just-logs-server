@@ -428,17 +428,18 @@ export default {
   align-items: center;
   gap: 0.5rem;
   padding: 0.375rem 0.75rem;
-  background: var(--bg-sidebar-hover, #2a2a2a);
+  background: var(--bg-tertiary, #f5f5f5);
   border-radius: 6px;
-  color: var(--text-sidebar, #e0e0e0);
+  color: var(--text-primary, #333);
   cursor: pointer;
   font-size: 0.8125rem;
   transition: all 0.2s;
   font-weight: 500;
+  border: 1px solid var(--border-color, #e0e0e0);
 }
 
 .user-menu:hover {
-  background: var(--bg-sidebar-active, #333);
+  background: var(--bg-hover, #f0f0f0);
 }
 
 .user-avatar-small {
@@ -632,7 +633,7 @@ export default {
   bottom: 0;
   width: 280px;
   max-width: 80vw;
-  background: var(--bg-sidebar, #1a1a1a);
+  background: var(--bg-card, #ffffff);
   box-shadow: 4px 0 12px rgba(0, 0, 0, 0.3);
   display: flex;
   flex-direction: column;
@@ -644,13 +645,13 @@ export default {
   align-items: center;
   justify-content: space-between;
   padding: 1rem;
-  border-bottom: 1px solid var(--border-color, #333);
+  border-bottom: 1px solid var(--border-color, #e0e0e0);
 }
 
 .close-nav-btn {
   background: transparent;
   border: none;
-  color: var(--text-sidebar, #e0e0e0);
+  color: var(--text-secondary, #666);
   cursor: pointer;
   font-size: 1.25rem;
   padding: 0.5rem;
@@ -662,7 +663,8 @@ export default {
 }
 
 .close-nav-btn:hover {
-  background: var(--bg-sidebar-hover, #2a2a2a);
+  background: var(--bg-tertiary, #f5f5f5);
+  color: var(--text-primary, #333);
 }
 
 .mobile-nav-items {
@@ -675,7 +677,7 @@ export default {
   align-items: center;
   gap: 1rem;
   padding: 0.875rem 1.25rem;
-  color: var(--text-sidebar, #e0e0e0);
+  color: var(--text-primary, #333);
   text-decoration: none;
   transition: all 0.2s;
   font-weight: 500;
@@ -683,7 +685,7 @@ export default {
 }
 
 .mobile-nav-link:hover {
-  background: var(--bg-sidebar-hover, #2a2a2a);
+  background: var(--bg-tertiary, #f5f5f5);
 }
 
 .mobile-nav-link.active {
